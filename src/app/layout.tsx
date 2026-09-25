@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
+import { aktuelleSprache, texte } from "@/lib/i18n/server";
+import { SpracheProvider } from "@/components/SpracheProvider";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Bücherfuchs",
-  description: "Die Familienbibliothek mit Barcode-Scanner",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await texte();
+  return { title: "Bücherfuchs", description: t.appBeschreibung };
+}
 
 // Seit Next 15 ist `viewport` ein eigener Export, nicht mehr Teil von `metadata`.
 //
@@ -20,10 +22,15 @@ export const viewport: Viewport = {
   themeColor: "#efede8",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+// `lang` folgt der Sprache der Oberfläche. Das ist mehr als Formsache: Die Silbentrennung der
+// Cover-Platzhalter (hyphens-auto) richtet sich danach.
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const sprache = await aktuelleSprache();
   return (
-    <html lang="de" className={`${fontVariables} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+    <html lang={sprache} className={`${fontVariables} h-full antialiased`}>
+      <body className="min-h-full">
+        <SpracheProvider sprache={sprache}>{children}</SpracheProvider>
+      </body>
     </html>
   );
 }

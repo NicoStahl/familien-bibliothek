@@ -1,25 +1,12 @@
 import "server-only";
 import { alleBuecher } from "./buecher";
 import { formatiereIsbn } from "./isbn";
+import { kategorieName, type Woerterbuch } from "./i18n";
 
 // CSV-Export des gesamten Katalogs. Zweck laut Plan: unter anderem Versicherungsnachweis bei
 // Verlust oder Schaden — die Datei wird also im Zweifel von jemandem gelesen, der die App nie
-// gesehen hat. Deshalb ausgeschriebene Spaltenüberschriften statt Feldnamen.
-
-const SPALTEN = [
-  "Titel",
-  "Autor",
-  "ISBN",
-  "Kategorie",
-  "Besitzer",
-  "Serie",
-  "Band",
-  "Verlag",
-  "Jahr",
-  "Ausgeliehen an",
-  "Ausgeliehen seit",
-  "Erfasst am",
-] as const;
+// gesehen hat. Deshalb ausgeschriebene Spaltenüberschriften statt Feldnamen, in der Sprache
+// der Oberfläche (Wörterbuch unter `csv`).
 
 /**
  * Setzt ein Feld in Anführungszeichen und verdoppelt darin enthaltene.
@@ -47,8 +34,8 @@ function feld(wert: string | number | null): string {
  *  • Ein UTF-8-BOM am Anfang. Ohne ihn liest Excel die Datei als Windows-1252, und aus
  *    "Grüffelo" wird "GrÃ¼ffelo".
  */
-export function katalogAlsCsv(): string {
-  const zeilen = [SPALTEN.map(feld).join(";")];
+export function katalogAlsCsv(t: Woerterbuch): string {
+  const zeilen = [t.csv.spalten.map(feld).join(";")];
 
   for (const b of alleBuecher()) {
     zeilen.push(
@@ -56,7 +43,7 @@ export function katalogAlsCsv(): string {
         feld(b.titel),
         feld(b.autor),
         feld(b.isbn ? formatiereIsbn(b.isbn) : null),
-        feld(b.kategorie),
+        feld(kategorieName(t, b.kategorie)),
         feld(b.besitzer),
         feld(b.serie),
         feld(b.band),
@@ -73,8 +60,8 @@ export function katalogAlsCsv(): string {
 }
 
 /** Dateiname mit Datum: buecherfuchs-katalog-2026-09-04.csv */
-export function csvDateiname(): string {
+export function csvDateiname(t: Woerterbuch): string {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, "0");
-  return `buecherfuchs-katalog-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.csv`;
+  return `${t.csv.dateiname}-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.csv`;
 }

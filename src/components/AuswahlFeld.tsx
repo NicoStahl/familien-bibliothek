@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTexte } from "@/components/SpracheProvider";
 
 // Auswahl aus den schon vergebenen Werten, mit Ausweg in den Freitext -- für Serie und Verlag.
 //
@@ -61,6 +62,7 @@ export function AuswahlFeld({
     ? (werte.find((s) => s.toLowerCase() === vorgabe.toLowerCase()) ?? null)
     : null;
 
+  const t = useTexte();
   const [wahl, setWahl] = useState<string>(vorgabe ? (bekannt ?? NEU) : "");
   const [neuerName, setNeuerName] = useState(bekannt ? "" : (vorgabe ?? ""));
   /** Stand das Formular von Anfang an im Eingabemodus? Dann nicht ungefragt den Fokus holen. */
@@ -103,7 +105,7 @@ export function AuswahlFeld({
               onClick={() => setWahl(bekannt ?? "")}
               className="utility mt-1.5 text-[10px] text-stein underline"
             >
-              Doch aus der Liste
+              {t.formular.dochAusDerListe}
             </button>
           )}
         </>

@@ -12,13 +12,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "@/components/NavIcons";
 import { TABS, isActivePath } from "@/lib/nav";
+import { useTexte } from "@/components/SpracheProvider";
 
 export function TabBar() {
   const pathname = usePathname();
+  const t = useTexte();
 
   return (
     <nav
-      aria-label="Hauptnavigation"
+      aria-label={t.nav.hauptnavigation}
       className="tabbar fixed inset-x-0 bottom-0 z-40 border-t border-linie bg-papier"
     >
       <ul className="mx-auto flex max-w-2xl items-stretch">
@@ -34,7 +36,7 @@ export function TabBar() {
                 }`}
               >
                 <NavIcon name={item.icon} className="h-[23px] w-[23px]" />
-                {item.label}
+                {t.nav[item.label]}
               </Link>
             </li>
           );

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CoverPlatzhalter } from "@/components/CoverPlatzhalter";
 import { listeAusgeliehen } from "@/lib/buecher";
 import { langesDatum, seitWann } from "@/lib/datum";
+import { texte } from "@/lib/i18n/server";
 
 // Was gerade nicht im Regal steht.
 //
@@ -11,23 +12,27 @@ import { langesDatum, seitWann } from "@/lib/datum";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Verliehen — Bücherfuchs" };
+export async function generateMetadata() {
+  const t = await texte();
+  return { title: t.seitentitel(t.verliehenSeite.titel) };
+}
 
-export default function AusgeliehenSeite() {
+export default async function AusgeliehenSeite() {
+  const t = await texte();
   const buecher = listeAusgeliehen();
 
   return (
     <div className="px-5 pt-6">
-      <h1 className="titel-gross text-[27px]">Verliehen</h1>
+      <h1 className="titel-gross text-[27px]">{t.verliehenSeite.titel}</h1>
 
       {buecher.length === 0 ? (
         <p className="mt-10 text-center text-sm text-stein">
-          Alle Bücher sind zuhause.
+          {t.verliehenSeite.alleZuhause}
         </p>
       ) : (
         <>
           <p className="utility mt-2 text-[10px] text-stein">
-            {buecher.length === 1 ? "1 Buch unterwegs" : `${buecher.length} Bücher unterwegs`}
+            {t.verliehenSeite.unterwegs(buecher.length)}
           </p>
 
           <ul className="mt-5 space-y-3">
@@ -48,9 +53,9 @@ export default function AusgeliehenSeite() {
                   <div className="min-w-0 flex-1">
                     <p className="titel-klein text-[15px]">{b.titel}</p>
                     {b.autor && <p className="mt-0.5 text-[12.5px] text-stein">{b.autor}</p>}
-                    <p className="hand mt-1.5 text-rost">bei {b.ausgeliehen_an}</p>
+                    <p className="hand mt-1.5 text-rost">{t.ausleihe.bei(b.ausgeliehen_an ?? "")}</p>
                     <p className="utility mt-1 text-[9.5px] text-stein">
-                      {seitWann(b.ausgeliehen_am) ?? langesDatum(b.ausgeliehen_am) ?? "ohne Datum"}
+                      {seitWann(t, b.ausgeliehen_am) ?? langesDatum(t, b.ausgeliehen_am) ?? t.datum.ohneDatum}
                     </p>
                   </div>
                 </Link>

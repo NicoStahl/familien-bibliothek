@@ -14,6 +14,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { KATEGORIEN } from "@/lib/kategorien";
+import { kategorieName } from "@/lib/i18n";
+import { useTexte } from "@/components/SpracheProvider";
 
 const TIPP_PAUSE_MS = 250;
 
@@ -24,6 +26,7 @@ export function KatalogFilter({ serien, besitzer }: { serien: string[]; besitzer
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const t = useTexte();
 
   const [eingabe, setEingabe] = useState(params.get("q") ?? "");
   /** Was diese Komponente zuletzt selbst in die Adresse geschrieben hat — siehe unten. */
@@ -80,8 +83,8 @@ export function KatalogFilter({ serien, besitzer }: { serien: string[]; besitzer
           type="search"
           value={eingabe}
           onChange={(e) => setEingabe(e.target.value)}
-          placeholder="Titel oder Autor"
-          aria-label="Bücher durchsuchen"
+          placeholder={t.filter.suchePlatzhalter}
+          aria-label={t.filter.sucheLabel}
           autoComplete="off"
           className="h-12 w-full rounded-lg border border-linie bg-karte pl-10 pr-3 text-base outline-none focus:border-tinte"
         />
@@ -89,24 +92,24 @@ export function KatalogFilter({ serien, besitzer }: { serien: string[]; besitzer
 
       <div className="mt-2 flex gap-1.5">
         <select
-          aria-label="Nach Kategorie filtern"
+          aria-label={t.filter.kategorieLabel}
           value={params.get("kategorie") ?? ""}
           onChange={(e) => setze({ kategorie: e.target.value || null })}
           className={FELD}
         >
-          <option value="">Kategorie</option>
+          <option value="">{t.filter.kategorie}</option>
           {KATEGORIEN.map((k) => (
-            <option key={k} value={k}>{k}</option>
+            <option key={k} value={k}>{kategorieName(t, k)}</option>
           ))}
         </select>
 
         <select
-          aria-label="Nach Besitzer filtern"
+          aria-label={t.filter.besitzerLabel}
           value={params.get("besitzer") ?? ""}
           onChange={(e) => setze({ besitzer: e.target.value || null })}
           className={FELD}
         >
-          <option value="">Besitzer</option>
+          <option value="">{t.filter.besitzer}</option>
           {besitzer.map((name) => (
             <option key={name} value={name}>{name}</option>
           ))}
@@ -115,28 +118,28 @@ export function KatalogFilter({ serien, besitzer }: { serien: string[]; besitzer
 
       <div className="mt-1.5 flex gap-1.5">
         <select
-          aria-label="Nach Serie filtern"
+          aria-label={t.filter.serieLabel}
           value={params.get("serie") ?? ""}
           onChange={(e) => setze({ serie: e.target.value || null })}
           className={FELD}
           // Ohne eine einzige Serie im Katalog wäre das Feld eine leere Versprechung.
           disabled={serien.length === 0}
         >
-          <option value="">Serie</option>
+          <option value="">{t.filter.serie}</option>
           {serien.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
 
         <select
-          aria-label="Nach Ausleihstatus filtern"
+          aria-label={t.filter.statusLabel}
           value={params.get("status") ?? ""}
           onChange={(e) => setze({ status: e.target.value || null })}
           className={FELD}
         >
-          <option value="">Status</option>
-          <option value="verfuegbar">Zuhause</option>
-          <option value="verliehen">Verliehen</option>
+          <option value="">{t.filter.status}</option>
+          <option value="verfuegbar">{t.filter.zuhause}</option>
+          <option value="verliehen">{t.filter.verliehen}</option>
         </select>
       </div>
     </div>

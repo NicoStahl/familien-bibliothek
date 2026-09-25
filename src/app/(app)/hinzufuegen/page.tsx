@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Scanner } from "@/components/Scanner";
 import { IsbnEingabe } from "@/components/IsbnEingabe";
+import { texte } from "@/lib/i18n/server";
 
 // Der primäre Weg ins Regal: Barcode scannen. So steht es im Plan, und so ist die App
 // gedacht — man steht vor dem Regal, nicht vor der Tastatur.
@@ -15,15 +16,18 @@ import { IsbnEingabe } from "@/components/IsbnEingabe";
 // Formular ganz unten. Wer vor dem Regal steht, soll nicht erst an einem Eingabefeld
 // vorbeiscrollen.
 
-export const metadata = { title: "Hinzufügen — Bücherfuchs" };
+export async function generateMetadata() {
+  const t = await texte();
+  return { title: t.seitentitel(t.hinzufuegen.reiter) };
+}
 
-export default function HinzufuegenSeite() {
+export default async function HinzufuegenSeite() {
+  const t = await texte();
   return (
     <div className="px-5 pt-6">
-      <h1 className="titel-gross text-[27px]">Buch aufnehmen</h1>
+      <h1 className="titel-gross text-[27px]">{t.hinzufuegen.titel}</h1>
       <p className="mt-2 text-sm leading-relaxed text-stein">
-        Der Strichcode auf der Rückseite ist die ISBN. Titel, Autor, Verlag und Cover kommen
-        danach von allein.
+        {t.hinzufuegen.einleitung}
       </p>
 
       <div className="mt-5">
@@ -32,8 +36,7 @@ export default function HinzufuegenSeite() {
 
       <div className="mt-6 border-t border-linie-zart pt-4">
         <p className="text-[13px] leading-relaxed text-stein">
-          Lässt sich der Barcode nicht lesen — abgerissen, überklebt, zu dunkel — geht die ISBN
-          auch von Hand. Sie steht als Ziffernfolge unter dem Strichcode oder im Impressum.
+          {t.hinzufuegen.handHinweis}
         </p>
         <div className="mt-3">
           <IsbnEingabe />
@@ -42,13 +45,13 @@ export default function HinzufuegenSeite() {
 
       <div className="mt-6 border-t border-linie-zart pt-4">
         <p className="text-[13px] leading-relaxed text-stein">
-          Ältere Bücher und viele Bilderbücher tragen gar keine ISBN.
+          {t.hinzufuegen.ohneIsbnHinweis}
         </p>
         <Link
           href="/hinzufuegen/manuell"
           className="mt-3 flex h-12 w-full items-center justify-center rounded-lg border border-linie text-base font-semibold text-tinte"
         >
-          Ohne Barcode eintragen
+          {t.hinzufuegen.ohneBarcode}
         </Link>
       </div>
     </div>

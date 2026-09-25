@@ -49,7 +49,7 @@ export function CoverPlatzhalter({
         {/* line-clamp statt Kürzen im Code: Wo genau der Titel abbricht, hängt von der
             Kachelbreite ab, und die kennt nur der Browser.
 
-            hyphens-auto braucht das lang="de" am <html>, das im Root-Layout steht — ohne
+            hyphens-auto braucht das lang-Attribut am <html>, das im Root-Layout steht — ohne
             Silbentrennung schiebt ein Wort wie "Drachenreiter" die Zeile in einer 105 px
             breiten Kachel über den Rand. break-words steht als Rückfall daneben, weil die
             Trennmuster nicht in jedem Browser vorhanden sind. */}

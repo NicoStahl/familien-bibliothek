@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useTexte } from "@/components/SpracheProvider";
 
 /**
  * Absendeknopf, der sich während der Verarbeitung selbst sperrt.
@@ -11,6 +12,7 @@ import { useFormStatus } from "react-dom";
  */
 export function SpeichernKnopf({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
+  const t = useTexte();
 
   return (
     <button
@@ -18,7 +20,7 @@ export function SpeichernKnopf({ children }: { children: React.ReactNode }) {
       disabled={pending}
       className="h-12 w-full rounded-lg bg-tinte text-base font-semibold text-papier disabled:opacity-60"
     >
-      {pending ? "Wird gespeichert …" : children}
+      {pending ? t.formular.wirdGespeichert : children}
     </button>
   );
 }

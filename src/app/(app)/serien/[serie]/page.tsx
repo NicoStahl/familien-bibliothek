@@ -7,6 +7,7 @@ import { BuchKachel } from "@/components/BuchKachel";
 import { buecherDerSerie } from "@/lib/buecher";
 import { serienVorschlaege } from "@/lib/buchapi";
 import { stoerungsText } from "@/lib/stoerung";
+import { texte } from "@/lib/i18n/server";
 
 // Eine Serie: was davon im Regal steht, und darunter unverbindliche Vorschläge, was es sonst
 // noch geben könnte.
@@ -23,6 +24,7 @@ export default async function SerienDetailSeite({ params }: { params: Promise<{ 
   const name = decodeURIComponent(serie);
   const buecher = buecherDerSerie(name);
   if (buecher.length === 0) notFound();
+  const t = await texte();
 
   return (
     <div className="pb-4">
@@ -30,8 +32,8 @@ export default async function SerienDetailSeite({ params }: { params: Promise<{ 
         titel={name}
         titelZeile={<SerieUmbenennen name={name} />}
         zurueck="/serien"
-        zurueckLabel="Serien"
-        untertitel={buecher.length === 1 ? "1 Band im Regal" : `${buecher.length} Bände im Regal`}
+        zurueckLabel={t.serien.titel}
+        untertitel={t.serien.imRegal(buecher.length)}
       />
 
       <div className="px-5">
@@ -40,23 +42,21 @@ export default async function SerienDetailSeite({ params }: { params: Promise<{ 
             <div key={b.id}>
               <BuchKachel buch={b} />
               {b.band !== null && (
-                <p className="utility mt-1.5 text-center text-[9.5px] text-stein">Band {b.band}</p>
+                <p className="utility mt-1.5 text-center text-[9.5px] text-stein">{t.serien.band(b.band)}</p>
               )}
             </div>
           ))}
         </div>
 
         <div className="mt-9 border-t border-linie-zart pt-5">
-          <h2 className="titel-klein text-[17px]">Könnte auch dazugehören</h2>
+          <h2 className="titel-klein text-[17px]">{t.serien.koennteDazugehoeren}</h2>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-stein">
-            Über den Seriennamen gesucht und ungeprüft übernommen. Es ist gut möglich, dass hier
-            Titel stehen, die mit der Serie nichts zu tun haben — Malbücher etwa, oder
-            Sekundärliteratur.
+            {t.serien.vorschlagHinweis}
           </p>
 
           {/* Eigene Suspense-Grenze: Der API-Aufruf dauert bis zu acht Sekunden, und solange
               soll das Regal oben nicht auf sich warten lassen. */}
-          <Suspense fallback={<p className="mt-4 text-sm text-stein">Wird gesucht …</p>}>
+          <Suspense fallback={<p className="mt-4 text-sm text-stein">{t.serien.wirdGesucht}</p>}>
             <Vorschlaege serie={name} vorhandeneTitel={buecher.map((b) => b.titel)} />
           </Suspense>
         </div>
@@ -73,6 +73,7 @@ async function Vorschlaege({
   vorhandeneTitel: string[];
 }) {
   const { quelle, vorschlaege: alle, stoerungen } = await serienVorschlaege(serie);
+  const t = await texte();
 
   // Was schon im Regal steht, gehört nicht in eine Kaufanregung. Verglichen wird über den
   // kleingeschriebenen Titel und nicht über die ISBN: Der vorhandene Band ist oft eine andere
@@ -84,21 +85,21 @@ async function Vorschlaege({
   if (offen.length === 0) {
     // Dieselbe Unterscheidung wie beim Scan: Eine leere Liste, weil die Dienste schweigen, ist
     // keine Aussage über die Serie.
-    const hinweis = stoerungsText(stoerungen);
+    const hinweis = stoerungsText(t, stoerungen);
     return hinweis ? (
       <p className="mt-4 rounded-lg border border-rost/40 bg-rost/5 p-3 text-sm leading-relaxed text-tinte">
         {hinweis}
       </p>
     ) : (
       <p className="mt-4 text-sm text-stein">
-        Keine weiteren Titel gefunden.
+        {t.serien.keineWeiteren}
       </p>
     );
   }
 
   return (
     <>
-      <p className="utility mt-3 text-[9.5px] text-stein">Quelle: {quelle}</p>
+      <p className="utility mt-3 text-[9.5px] text-stein">{t.serien.quelle(quelle ?? "")}</p>
       <ul className="mt-3 space-y-3">
         {offen.map((v, i) => (
           <li
@@ -115,14 +116,14 @@ async function Vorschlaege({
               <p className="titel-klein text-[14.5px]">{v.titel}</p>
               {v.autor && <p className="mt-0.5 text-[12px] text-stein">{v.autor}</p>}
               <p className="utility mt-1 text-[9.5px] text-stein">
-                {[v.jahr, v.isbn].filter(Boolean).join(" · ") || "ohne Angaben"}
+                {[v.jahr, v.isbn].filter(Boolean).join(" · ") || t.serien.ohneAngaben}
               </p>
               {v.isbn && (
                 <Link
                   href={`/hinzufuegen/erfassen?isbn=${v.isbn}`}
                   className="utility mt-1.5 inline-block text-[9.5px] text-tinte underline"
                 >
-                  Haben wir doch — aufnehmen
+                  {t.serien.habenWir}
                 </Link>
               )}
             </div>

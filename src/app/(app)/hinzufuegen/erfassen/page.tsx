@@ -8,6 +8,7 @@ import { findeNachIsbn } from "@/lib/buecher";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { normalisiereIsbn } from "@/lib/isbn";
 import { stoerungsText } from "@/lib/stoerung";
+import { texte } from "@/lib/i18n/server";
 
 // Das vorausgefüllte Formular nach einem Scan.
 //
@@ -37,20 +38,21 @@ export default async function ErfassenSeite({
 
   // Steht hier ein Satz, war die Frage unbeantwortet — nicht verneint. Der Kopf sagt das dann
   // auch: "Nichts gefunden" wäre eine Behauptung über das Buch, die niemand geprüft hat.
-  const hinweis = stoerungsText(stoerungen);
+  const t = await texte();
+  const hinweis = stoerungsText(t, stoerungen);
 
   return (
     <div>
       <SeitenKopf
-        titel={treffer ? "Gefunden" : hinweis ? "Nicht abrufbar" : "Nichts gefunden"}
+        titel={treffer ? t.hinzufuegen.gefunden : hinweis ? t.hinzufuegen.nichtAbrufbar : t.hinzufuegen.nichtsGefunden}
         zurueck="/hinzufuegen"
-        zurueckLabel="Scannen"
+        zurueckLabel={t.hinzufuegen.zurueck}
         untertitel={
           treffer
-            ? "Bitte Besitzer wählen und die Angaben prüfen."
+            ? t.hinzufuegen.gefundenUntertitel
             : hinweis
               ? hinweis
-              : "Zu dieser ISBN kennen die Buch-Verzeichnisse keinen Titel. Die Angaben von Hand eintragen — die ISBN ist bereits gespeichert."
+              : t.hinzufuegen.nichtsGefundenUntertitel
         }
       />
 
@@ -58,14 +60,14 @@ export default async function ErfassenSeite({
         <div className="mx-5 mt-4 rounded-lg border border-messing/50 bg-messing/10 p-3">
           <p className="text-sm leading-relaxed text-tinte">
             {duplikate.length === 1
-              ? `Achtung: Dieses Buch steht schon im Regal und gehört ${duplikate[0].besitzer}.`
-              : `Achtung: Dieses Buch steht schon ${duplikate.length}-mal im Regal.`}{" "}
-            Ein zweites Exemplar anzulegen ist in Ordnung — wenn es wirklich zweimal da ist.
+              ? t.hinzufuegen.duplikatEins(duplikate[0].besitzer)
+              : t.hinzufuegen.duplikatMehrere(duplikate.length)}{" "}
+            {t.hinzufuegen.duplikatOk}
           </p>
           <div className="mt-2 flex flex-wrap gap-4">
             {duplikate.map((d) => (
               <Link key={d.id} href={`/buch/${d.id}`} className="utility text-[10.5px] text-tinte underline">
-                Exemplar von {d.besitzer}
+                {t.hinzufuegen.exemplarVon(d.besitzer)}
               </Link>
             ))}
           </div>
@@ -74,7 +76,7 @@ export default async function ErfassenSeite({
 
       <BuchFormular
         action={speichereNeuesBuch}
-        knopf="Ins Regal stellen"
+        knopf={t.formular.insRegal}
         serien={vergebeneSerien()}
         verlage={vergebeneVerlage()}
         vorgabe={{

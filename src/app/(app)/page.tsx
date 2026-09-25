@@ -5,6 +5,8 @@ import { KatalogFilter } from "@/components/KatalogFilter";
 import { Fuchs } from "@/components/Fuchs";
 import { anzahlBuecher, filterAusParams, istLeer, sucheBuecher, vergebeneSerien } from "@/lib/suche";
 import { besitzerNamen } from "@/lib/besitzer";
+import { texte } from "@/lib/i18n/server";
+import type { Woerterbuch } from "@/lib/i18n";
 
 // Der Katalog: die Startseite und zugleich die Suche.
 //
@@ -30,6 +32,7 @@ export default async function KatalogSeite({ searchParams }: { searchParams: Par
   const serien = vergebeneSerien();
   const gesamt = anzahlBuecher();
   const gefiltert = !istLeer(filter);
+  const t = await texte();
 
   return (
     <div className="px-5 pt-6">
@@ -38,7 +41,7 @@ export default async function KatalogSeite({ searchParams }: { searchParams: Par
         <div className="min-w-0 flex-1">
           <h1 className="titel-gross text-[27px]">Bücherfuchs</h1>
           <p className="utility mt-0.5 text-[10px] text-stein">
-            {gesamt === 1 ? "1 Buch" : `${gesamt} Bücher`}
+            {t.katalog.anzahlBuecher(gesamt)}
           </p>
         </div>
         {/* Der Scan direkt im Kopf, wie beim Spielefuchs (Nicos Wunsch vom 15.09.2026): Wer vor
@@ -46,8 +49,8 @@ export default async function KatalogSeite({ searchParams }: { searchParams: Par
             dieselbe Seite wie der Reiter — dort öffnet die Kamera. */}
         <Link
           href="/hinzufuegen"
-          aria-label="Barcode scannen"
-          title="Barcode scannen"
+          aria-label={t.katalog.scannen}
+          title={t.katalog.scannen}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tinte text-papier"
         >
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -69,12 +72,12 @@ export default async function KatalogSeite({ searchParams }: { searchParams: Par
       </div>
 
       {buecher.length === 0 ? (
-        <LeererKatalog gefiltert={gefiltert} />
+        <LeererKatalog gefiltert={gefiltert} t={t} />
       ) : (
         <>
           {gefiltert && (
             <p className="utility mt-4 text-[10px] text-stein">
-              {buecher.length === 1 ? "1 Treffer" : `${buecher.length} Treffer`}
+              {t.katalog.treffer(buecher.length)}
             </p>
           )}
           {/* Drei Spalten, große Kacheln — so steht es im Plan. Ab Tablet-Breite vier: Bei 672 px
@@ -95,13 +98,13 @@ export default async function KatalogSeite({ searchParams }: { searchParams: Par
  * nie etwas" braucht einen Weg nach vorn, "diese Filter treffen nichts" braucht einen Weg
  * zurück.
  */
-function LeererKatalog({ gefiltert }: { gefiltert: boolean }) {
+function LeererKatalog({ gefiltert, t }: { gefiltert: boolean; t: Woerterbuch }) {
   if (gefiltert) {
     return (
       <div className="mt-10 text-center">
-        <p className="text-sm text-stein">Kein Buch passt zu dieser Auswahl.</p>
+        <p className="text-sm text-stein">{t.katalog.keinTreffer}</p>
         <Link href="/" className="utility mt-3 inline-block text-[10.5px] text-tinte underline">
-          Filter zurücksetzen
+          {t.katalog.filterZuruecksetzen}
         </Link>
       </div>
     );
@@ -109,16 +112,15 @@ function LeererKatalog({ gefiltert }: { gefiltert: boolean }) {
 
   return (
     <div className="mt-10 text-center">
-      <p className="titel-klein text-[18px]">Das Regal ist noch leer.</p>
+      <p className="titel-klein text-[18px]">{t.katalog.leer}</p>
       <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-stein">
-        Scanne den Barcode auf der Rückseite eines Buchs — Titel, Autor und Cover kommen dann
-        von allein.
+        {t.katalog.leerText}
       </p>
       <Link
         href="/hinzufuegen"
         className="mt-5 inline-flex h-12 items-center rounded-lg bg-tinte px-5 text-base font-semibold text-papier"
       >
-        Erstes Buch aufnehmen
+        {t.katalog.erstesBuch}
       </Link>
     </div>
   );

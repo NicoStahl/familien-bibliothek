@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { normalisiereIsbn } from "@/lib/isbn";
 import { stoerungsText, type Dienststoerung } from "@/lib/stoerung";
+import { useTexte } from "@/components/SpracheProvider";
+import type { Woerterbuch } from "@/lib/i18n";
 
 type Duplikat = { id: number; titel: string; besitzer: string };
 
@@ -41,21 +43,18 @@ type Zustand =
   | { art: "laeuft" }
   | { art: "sucht"; isbn: string }
   | { art: "fund"; fund: Fund }
-  | { art: "fehler"; text: string };
+  | { art: "fehler"; grund: Kamerafehler };
+
+// Der Grund, nicht der fertige Satz: So folgt die Meldung der Sprache, die beim Anzeigen gilt.
+type Kamerafehler = "nurHttps" | "kameraAbgelehnt" | "keineKamera" | "kameraBelegt" | "kameraFehler";
 
 /** Übersetzt die Ausnahmen von getUserMedia in Sätze, mit denen jemand etwas anfangen kann. */
-function kameraFehler(fehler: unknown): string {
+function kameraFehler(fehler: unknown): Kamerafehler {
   const name = fehler instanceof Error ? fehler.name : "";
-  if (name === "NotAllowedError" || name === "SecurityError") {
-    return "Der Zugriff auf die Kamera wurde abgelehnt. In den Einstellungen des Browsers für diese Seite die Kamera erlauben und die Seite neu laden.";
-  }
-  if (name === "NotFoundError" || name === "OverconstrainedError") {
-    return "Es wurde keine Kamera gefunden.";
-  }
-  if (name === "NotReadableError") {
-    return "Die Kamera wird gerade von einem anderen Programm benutzt.";
-  }
-  return "Die Kamera ließ sich nicht starten.";
+  if (name === "NotAllowedError" || name === "SecurityError") return "kameraAbgelehnt";
+  if (name === "NotFoundError" || name === "OverconstrainedError") return "keineKamera";
+  if (name === "NotReadableError") return "kameraBelegt";
+  return "kameraFehler";
 }
 
 export function Scanner() {
@@ -67,6 +66,7 @@ export function Scanner() {
   const zuletztRef = useRef<string | null>(null);
 
   const [zustand, setZustand] = useState<Zustand>({ art: "startet" });
+  const t = useTexte();
 
   const verarbeite = useCallback(async (isbn13: string) => {
     setZustand({ art: "sucht", isbn: isbn13 });
@@ -99,10 +99,7 @@ export function Scanner() {
       // Fall (der Reverse Proxy liefert HTTPS aus); beim Testen im WLAN dagegen schon, und
       // dann ist eine klare Ansage besser als eine tote schwarze Fläche.
       if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-        setZustand({
-          art: "fehler",
-          text: "Die Kamera steht nur über HTTPS zur Verfügung. Am Rechner geht es über localhost, am Handy erst über die HTTPS-Adresse der App.",
-        });
+        setZustand({ art: "fehler", grund: "nurHttps" });
         return;
       }
 
@@ -141,7 +138,7 @@ export function Scanner() {
         if (abgebrochen) controls.stop();
         else setZustand({ art: "laeuft" });
       } catch (fehler) {
-        if (!abgebrochen) setZustand({ art: "fehler", text: kameraFehler(fehler) });
+        if (!abgebrochen) setZustand({ art: "fehler", grund: kameraFehler(fehler) });
       }
     }
 
@@ -180,20 +177,20 @@ export function Scanner() {
       </div>
 
       <div className={zustand.art === "fehler" ? "" : "mt-4"}>
-        {zustand.art === "startet" && <Hinweis>Kamera wird gestartet …</Hinweis>}
+        {zustand.art === "startet" && <Hinweis>{t.scanner.startet}</Hinweis>}
         {zustand.art === "laeuft" && (
-          <Hinweis>Den Barcode auf der Buchrückseite ins Bild halten.</Hinweis>
+          <Hinweis>{t.scanner.laeuft}</Hinweis>
         )}
-        {zustand.art === "sucht" && <Hinweis>ISBN {zustand.isbn} — Titel wird gesucht …</Hinweis>}
+        {zustand.art === "sucht" && <Hinweis>{t.scanner.sucht(zustand.isbn)}</Hinweis>}
         {zustand.art === "fehler" && (
           <div className="rounded-lg border border-rost/40 bg-rost/5 p-4">
-            <p className="text-sm leading-relaxed text-tinte">{zustand.text}</p>
+            <p className="text-sm leading-relaxed text-tinte">{t.scanner[zustand.grund]}</p>
             <Link href="/hinzufuegen/manuell" className="utility mt-3 inline-block text-[10.5px] text-tinte underline">
-              Buch von Hand eintragen
+              {t.scanner.vonHand}
             </Link>
           </div>
         )}
-        {zustand.art === "fund" && <FundKarte fund={zustand.fund} weiter={weiterScannen} />}
+        {zustand.art === "fund" && <FundKarte fund={zustand.fund} weiter={weiterScannen} t={t} />}
       </div>
     </div>
   );
@@ -210,13 +207,13 @@ function Hinweis({ children }: { children: React.ReactNode }) {
  * Entscheidung ändert, und sie muss gelesen sein, bevor der Daumen auf "Aufnehmen" geht.
  * Blockiert wird trotzdem nichts — zwei Geschwister dürfen dasselbe Buch je einmal besitzen.
  */
-function FundKarte({ fund, weiter }: { fund: Fund; weiter: () => void }) {
+function FundKarte({ fund, weiter, t }: { fund: Fund; weiter: () => void; t: Woerterbuch }) {
   const { treffer, duplikate, isbn, stoerungen, abfrageGescheitert } = fund;
 
   // Warum nichts dasteht — oder null, wenn "kennt keiner" die ganze Wahrheit ist.
   const hinweis = abfrageGescheitert
-    ? "Die Anfrage kam nicht bis zum Bücherfuchs durch; die Buch-Verzeichnisse wurden gar nicht erst gefragt. Später noch einmal versuchen — oder die Angaben jetzt von Hand eintragen."
-    : stoerungsText(stoerungen);
+    ? t.scanner.abfrageGescheitert
+    : stoerungsText(t, stoerungen);
 
   return (
     <div className="rounded-xl border border-linie bg-karte p-4">
@@ -224,10 +221,11 @@ function FundKarte({ fund, weiter }: { fund: Fund; weiter: () => void }) {
         <div className="mb-4 rounded-lg border border-messing/50 bg-messing/10 p-3">
           <p className="text-sm leading-relaxed text-tinte">
             {duplikate.length === 1
-              ? `Dieses Buch steht schon im Regal — es gehört ${duplikate[0].besitzer}.`
-              : `Dieses Buch steht schon ${duplikate.length}-mal im Regal: ${duplikate
-                  .map((d) => d.besitzer)
-                  .join(", ")}.`}
+              ? t.scanner.duplikatEins(duplikate[0].besitzer)
+              : t.scanner.duplikatMehrere(
+                  duplikate.length,
+                  duplikate.map((d) => d.besitzer).join(", ")
+                )}
           </p>
           {/* Der Besitzername im Link, nicht "Vorhandenes ansehen": Bei zwei Exemplaren
               stünden sonst zwei gleich beschriftete Links untereinander, und man müsste raten,
@@ -239,7 +237,7 @@ function FundKarte({ fund, weiter }: { fund: Fund; weiter: () => void }) {
                 href={`/buch/${d.id}`}
                 className="utility text-[10.5px] text-tinte underline"
               >
-                Exemplar von {d.besitzer}
+                {t.scanner.exemplarVon(d.besitzer)}
               </Link>
             ))}
           </div>
@@ -260,14 +258,13 @@ function FundKarte({ fund, weiter }: { fund: Fund; weiter: () => void }) {
               ist das Erste, was gelesen wird, und sie darf keine Auskunft behaupten, die es
               nicht gibt. */}
           <p className="titel-klein text-[16px]">
-            {treffer?.titel ?? (hinweis ? "Titel nicht abrufbar" : "Kein Titel gefunden")}
+            {treffer?.titel ?? (hinweis ? t.scanner.titelNichtAbrufbar : t.scanner.keinTitel)}
           </p>
           {treffer?.autor && <p className="mt-1 text-[13px] text-stein">{treffer.autor}</p>}
           <p className="utility mt-2 text-[10px] text-stein">{isbn}</p>
           {!treffer && !hinweis && (
             <p className="mt-2 text-[12.5px] leading-relaxed text-stein">
-              Weder Google Books noch Open Library kennen diese ISBN. Titel und Autor lassen
-              sich im nächsten Schritt von Hand eintragen — die ISBN bleibt erhalten.
+              {t.scanner.unbekannt}
             </p>
           )}
           {!treffer && hinweis && (
@@ -282,14 +279,14 @@ function FundKarte({ fund, weiter }: { fund: Fund; weiter: () => void }) {
         href={`/hinzufuegen/erfassen?isbn=${isbn}`}
         className="mt-4 flex h-12 w-full items-center justify-center rounded-lg bg-tinte text-base font-semibold text-papier"
       >
-        Ins Regal aufnehmen
+        {t.scanner.aufnehmen}
       </Link>
       <button
         type="button"
         onClick={weiter}
         className="mt-2 h-11 w-full rounded-lg border border-linie text-sm font-semibold text-tinte"
       >
-        Nächstes Buch scannen
+        {t.scanner.naechstes}
       </button>
     </div>
   );

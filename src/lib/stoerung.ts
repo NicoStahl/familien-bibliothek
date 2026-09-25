@@ -13,6 +13,8 @@
 // Diese Datei liegt bewusst neben buchapi.ts und nicht darin: buchapi.ts ist `server-only`,
 // die Texte werden aber auch im Scanner gebraucht, und der läuft im Browser.
 
+import type { Woerterbuch } from "@/lib/i18n";
+
 export type Dienst = "Google Books" | "Open Library";
 
 export type Stoerungsart =
@@ -23,10 +25,10 @@ export type Stoerungsart =
 
 export type Dienststoerung = { dienst: Dienst; art: Stoerungsart };
 
-function grund(stoerung: Dienststoerung): string {
+function grund(t: Woerterbuch, stoerung: Dienststoerung): string {
   return stoerung.art === "kontingent"
-    ? `${stoerung.dienst} hat sein Tageskontingent erschöpft`
-    : `${stoerung.dienst} hat nicht geantwortet`;
+    ? t.stoerung.kontingent(stoerung.dienst)
+    : t.stoerung.ausfall(stoerung.dienst);
 }
 
 /**
@@ -38,20 +40,15 @@ function grund(stoerung: Dienststoerung): string {
  * andere Dienst also geantwortet und das Buch nicht gekannt — dann ist der Fund noch offen,
  * aber nicht ausgeschlossen. Stehen zwei darin, wurde faktisch nichts gefragt.
  */
-export function stoerungsText(stoerungen: Dienststoerung[]): string | null {
+export function stoerungsText(t: Woerterbuch, stoerungen: Dienststoerung[]): string | null {
   if (stoerungen.length === 0) return null;
 
-  const teile = stoerungen.map(grund).join(", ");
-  const kopf =
-    stoerungen.length >= 2
-      ? `Ob dieses Buch bekannt ist, lässt sich gerade nicht sagen: ${teile}.`
-      : `Das Buch ist womöglich doch bekannt: ${teile}, gefragt werden konnte nur der zweite Dienst.`;
+  const teile = stoerungen.map((s) => grund(t, s)).join(", ");
+  const kopf = stoerungen.length >= 2 ? t.stoerung.beide(teile) : t.stoerung.einer(teile);
 
-  const rat = stoerungen.some((s) => s.art === "kontingent")
-    ? "Ein eigener Google-Books-Schlüssel (GOOGLE_BOOKS_API_KEY in der .env) beendet das dauerhaft."
-    : null;
+  const rat = stoerungen.some((s) => s.art === "kontingent") ? t.stoerung.schluessel : null;
 
-  return [kopf, "Später noch einmal versuchen — oder die Angaben jetzt von Hand eintragen.", rat]
+  return [kopf, t.stoerung.spaeter, rat]
     .filter((s): s is string => s !== null)
     .join(" ");
 }

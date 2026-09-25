@@ -8,6 +8,8 @@ import { PencilIcon } from "@/components/IconButton";
 import { holeBuch } from "@/lib/buecher";
 import { besitzerBadge } from "@/lib/besitzer";
 import { formatiereIsbn } from "@/lib/isbn";
+import { kategorieName } from "@/lib/i18n";
+import { texte } from "@/lib/i18n/server";
 
 // Die Buchseite. Hier steht alles, was im Grid bewusst NICHT steht — Titel, Autor, Serie,
 // und die Detail-Angaben Verlag, Jahr und ISBN, die laut Plan reine Information sind und
@@ -20,11 +22,12 @@ export default async function BuchSeite({ params }: { params: Promise<{ id: stri
   const buch = holeBuch(Number(id));
   if (!buch) notFound();
 
+  const t = await texte();
   const badge = besitzerBadge(buch.besitzer);
 
   return (
     <div className="pb-6">
-      <SeitenKopf titel={buch.titel} zurueck="/" zurueckLabel="Katalog" />
+      <SeitenKopf titel={buch.titel} zurueck="/" zurueckLabel={t.buch.katalog} />
 
       <div className="px-5">
         {buch.autor && <p className="mt-2 text-[15px] text-stein">{buch.autor}</p>}
@@ -36,7 +39,7 @@ export default async function BuchSeite({ params }: { params: Promise<{ id: stri
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={`/api/cover/${buch.cover_datei}`}
-                  alt={`Cover von ${buch.titel}`}
+                  alt={t.buch.coverVon(buch.titel)}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -54,24 +57,24 @@ export default async function BuchSeite({ params }: { params: Promise<{ id: stri
               >
                 {badge.kuerzel}
               </span>
-              <span className="text-[14px] text-tinte">Gehört {buch.besitzer}</span>
+              <span className="text-[14px] text-tinte">{t.buch.gehoert(buch.besitzer)}</span>
             </div>
 
-            <p className="utility mt-3 text-[10px] text-stein">{buch.kategorie}</p>
+            <p className="utility mt-3 text-[10px] text-stein">{kategorieName(t, buch.kategorie)}</p>
 
             {buch.serie && (
               <p className="mt-3 text-[14px] leading-snug">
                 <Link href={`/serien/${encodeURIComponent(buch.serie)}`} className="text-tinte underline">
                   {buch.serie}
                 </Link>
-                {buch.band !== null && <span className="text-stein"> — Band {buch.band}</span>}
+                {buch.band !== null && <span className="text-stein"> — {t.buch.band(buch.band)}</span>}
               </p>
             )}
 
             <dl className="mt-4 space-y-1.5 text-[12.5px]">
-              {buch.verlag && <Zeile bezeichnung="Verlag" wert={buch.verlag} />}
-              {buch.jahr !== null && <Zeile bezeichnung="Jahr" wert={String(buch.jahr)} />}
-              {buch.isbn && <Zeile bezeichnung="ISBN" wert={formatiereIsbn(buch.isbn)} mono />}
+              {buch.verlag && <Zeile bezeichnung={t.buch.verlag} wert={buch.verlag} />}
+              {buch.jahr !== null && <Zeile bezeichnung={t.buch.jahr} wert={String(buch.jahr)} />}
+              {buch.isbn && <Zeile bezeichnung={t.buch.isbn} wert={formatiereIsbn(buch.isbn)} mono />}
             </dl>
           </div>
         </div>
@@ -87,11 +90,11 @@ export default async function BuchSeite({ params }: { params: Promise<{ id: stri
         <div className="mt-6 flex items-center justify-between border-t border-linie-zart pt-3">
           <Link
             href={`/buch/${buch.id}/bearbeiten`}
-            title="Buch bearbeiten"
+            title={t.buch.bearbeitenTitel}
             className="inline-flex h-11 items-center gap-2 rounded-md px-2 text-sm font-semibold text-tinte"
           >
             <PencilIcon />
-            Bearbeiten
+            {t.buch.bearbeiten}
           </Link>
           <BuchLoeschen id={buch.id} titel={buch.titel} />
         </div>

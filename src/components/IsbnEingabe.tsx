@@ -14,27 +14,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { pruefeIsbnEingabe } from "@/lib/isbn";
-
-const MELDUNG: Record<string, string> = {
-  leer: "Bitte eine ISBN eingeben.",
-  laenge: "Eine ISBN hat zehn oder dreizehn Ziffern. Bindestriche und Leerzeichen dürfen bleiben.",
-  "kein-buch":
-    "Diese Nummer beginnt nicht mit 978 oder 979 und ist damit kein Buch-Strichcode — vermutlich eine Zeitschrift oder ein anderes Produkt.",
-  pruefziffer:
-    "Die Prüfziffer stimmt nicht. Meist steckt eine verdrehte oder vertippte Ziffer darin.",
-};
+import { useTexte } from "@/components/SpracheProvider";
 
 export function IsbnEingabe() {
   const router = useRouter();
   const [wert, setWert] = useState("");
   const [fehler, setFehler] = useState<string | null>(null);
+  const t = useTexte();
+
+  const meldung: Record<string, string> = {
+    leer: t.isbnEingabe.leer,
+    laenge: t.isbnEingabe.laenge,
+    "kein-buch": t.isbnEingabe.keinBuch,
+    pruefziffer: t.isbnEingabe.pruefziffer,
+  };
 
   function absenden(ereignis: React.FormEvent) {
     ereignis.preventDefault();
     const ergebnis = pruefeIsbnEingabe(wert);
 
     if (ergebnis.art !== "ok") {
-      setFehler(MELDUNG[ergebnis.art]);
+      setFehler(meldung[ergebnis.art]);
       return;
     }
 
@@ -45,7 +45,7 @@ export function IsbnEingabe() {
   return (
     <form onSubmit={absenden} noValidate>
       <label className="utility block text-[10px] text-stein" htmlFor="isbn-eingabe">
-        ISBN von Hand eingeben
+        {t.isbnEingabe.label}
       </label>
       <div className="mt-1.5 flex gap-2">
         <input
@@ -72,7 +72,7 @@ export function IsbnEingabe() {
           type="submit"
           className="h-12 shrink-0 rounded-lg bg-tinte px-5 text-base font-semibold text-papier"
         >
-          Suchen
+          {t.isbnEingabe.suchen}
         </button>
       </div>
 

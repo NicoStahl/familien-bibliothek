@@ -6,6 +6,8 @@ import { AuswahlFeld } from "@/components/AuswahlFeld";
 import { SerieAuswahlFeld } from "@/components/SerieAuswahlFeld";
 import { SerienVorschlagProvider, TitelFeld } from "@/components/SerienVorschlag";
 import { formatiereIsbn } from "@/lib/isbn";
+import { kategorieName } from "@/lib/i18n";
+import { texte } from "@/lib/i18n/server";
 
 // EIN Formular für drei Zwecke — neu von Hand, neu nach einem Scan, und Bearbeiten. Es nimmt
 // dafür eine `vorgabe` ohne Datenbank-Identität entgegen; die `id` entscheidet, welche Action
@@ -37,7 +39,7 @@ const LABEL = "utility block text-[10px] text-stein";
 const EINGABE =
   "mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte";
 
-export function BuchFormular({
+export async function BuchFormular({
   action,
   vorgabe,
   serien,
@@ -55,6 +57,7 @@ export function BuchFormular({
   id?: number;
   knopf: string;
 }) {
+  const t = await texte();
   const vorschau = vorgabe.coverDatei ? `/api/cover/${vorgabe.coverDatei}` : vorgabe.coverUrl;
 
   return (
@@ -71,7 +74,7 @@ export function BuchFormular({
               <img src={vorschau} alt="" className="h-full w-full object-cover" />
             ) : (
               <CoverPlatzhalter
-                titel={vorgabe.titel || "Ohne Cover"}
+                titel={vorgabe.titel || t.formular.ohneCover}
                 autor={vorgabe.autor}
                 className="h-full w-full"
               />
@@ -81,7 +84,7 @@ export function BuchFormular({
 
         <div className="min-w-0 flex-1">
           <label htmlFor="cover_upload" className={LABEL}>
-            Eigenes Foto
+            {t.formular.eigenesFoto}
           </label>
           {/* capture="environment" öffnet am Handy direkt die Rückkamera statt der
               Fotomediathek — genau der Fall, um den es hier geht: Buch in der Hand, kein Cover
@@ -96,15 +99,15 @@ export function BuchFormular({
           />
           <p className="mt-2 text-[12px] leading-relaxed text-stein">
             {vorschau
-              ? "Ein eigenes Foto ersetzt das Cover oben."
-              : "Ohne Foto zeigt der Katalog einen Platzhalter mit dem Titel."}
+              ? t.formular.fotoErsetzt
+              : t.formular.ohneFoto}
           </p>
         </div>
       </div>
 
       <SerienVorschlagProvider>
         <div className="mt-6">
-          <label htmlFor="titel" className={LABEL}>Titel</label>
+          <label htmlFor="titel" className={LABEL}>{t.formular.titel}</label>
           <TitelFeld
             id="titel"
             name="titel"
@@ -116,7 +119,7 @@ export function BuchFormular({
         </div>
 
         <div className="mt-4">
-          <label htmlFor="autor" className={LABEL}>Autor</label>
+          <label htmlFor="autor" className={LABEL}>{t.formular.autor}</label>
           <input
             id="autor"
             name="autor"
@@ -128,7 +131,7 @@ export function BuchFormular({
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="kategorie" className={LABEL}>Kategorie</label>
+            <label htmlFor="kategorie" className={LABEL}>{t.formular.kategorie}</label>
             {/* Fällt auf "Sonstiges" zurück und NICHT auf den ersten Listeneintrag.
                 Ohne diese Zeile wählt der Browser bei einem unbekannten defaultValue von sich
                 aus die erste Option — ein frisch gescanntes Sachbuch stünde dann als
@@ -143,12 +146,12 @@ export function BuchFormular({
               className={EINGABE}
             >
               {KATEGORIEN.map((k) => (
-                <option key={k} value={k}>{k}</option>
+                <option key={k} value={k}>{kategorieName(t, k)}</option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="besitzer" className={LABEL}>Besitzer</label>
+            <label htmlFor="besitzer" className={LABEL}>{t.formular.besitzer}</label>
             <select
               id="besitzer"
               name="besitzer"
@@ -156,7 +159,7 @@ export function BuchFormular({
               required
               className={EINGABE}
             >
-              <option value="" disabled>Bitte wählen</option>
+              <option value="" disabled>{t.formular.bitteWaehlen}</option>
               {besitzerListe().map((b) => (
                 <option key={b.name} value={b.name}>{b.name}</option>
               ))}
@@ -172,7 +175,7 @@ export function BuchFormular({
             eingabeClass={EINGABE}
           />
           <div>
-            <label htmlFor="band" className={LABEL}>Band</label>
+            <label htmlFor="band" className={LABEL}>{t.formular.band}</label>
             <input
               id="band"
               name="band"
@@ -191,23 +194,23 @@ export function BuchFormular({
             Filterkriterien. Eingeklappt, damit die Maske beim Scannen kurz bleibt — die drei
             Werte stehen nach einem API-Treffer ohnehin schon richtig drin. */}
         <summary className="utility flex h-11 cursor-pointer list-none items-center px-3 text-[10px] text-stein">
-          Weitere Angaben
+          {t.formular.weitereAngaben}
         </summary>
         <div className="border-t border-linie-zart px-3 pb-4 pt-3">
           <div className="grid grid-cols-[1fr_88px] gap-3">
             <AuswahlFeld
               name="verlag"
-              label="Verlag"
+              label={t.formular.verlag}
               werte={verlage}
               vorgabe={vorgabe.verlag ?? null}
-              leerText="Kein Verlag"
-              neuText="Neuer Verlag …"
-              platzhalter="z. B. Carlsen"
+              leerText={t.formular.keinVerlag}
+              neuText={t.formular.neuerVerlag}
+              platzhalter={t.formular.verlagPlatzhalter}
               labelClass={LABEL}
               eingabeClass={EINGABE}
             />
             <div>
-              <label htmlFor="jahr" className={LABEL}>Jahr</label>
+              <label htmlFor="jahr" className={LABEL}>{t.formular.jahr}</label>
               <input
                 id="jahr"
                 name="jahr"
@@ -221,7 +224,7 @@ export function BuchFormular({
             </div>
           </div>
           <div className="mt-4">
-            <label htmlFor="isbn" className={LABEL}>ISBN</label>
+            <label htmlFor="isbn" className={LABEL}>{t.formular.isbn}</label>
             <input
               id="isbn"
               name="isbn"
@@ -232,7 +235,7 @@ export function BuchFormular({
               className={`${EINGABE} utility text-[13px]`}
             />
             <p className="mt-1.5 text-[12px] text-stein">
-              Eine ISBN-10 wird beim Speichern in ISBN-13 umgerechnet. Bindestriche sind egal.
+              {t.formular.isbnHinweis}
             </p>
           </div>
         </div>

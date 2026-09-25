@@ -13,16 +13,17 @@ export type NavIconName = "katalog" | "serien" | "hinzufuegen" | "ausgeliehen" |
 
 export type NavItem = {
   href: string;
-  label: string;
+  /** Schlüssel im Wörterbuch unter `nav`. */
+  label: "katalog" | "serien" | "hinzufuegen" | "verliehen" | "mehr";
   icon: NavIconName;
 };
 
 export const TABS: NavItem[] = [
-  { href: "/", label: "Katalog", icon: "katalog" },
-  { href: "/serien", label: "Serien", icon: "serien" },
-  { href: "/hinzufuegen", label: "Hinzufügen", icon: "hinzufuegen" },
-  { href: "/ausgeliehen", label: "Verliehen", icon: "ausgeliehen" },
-  { href: "/mehr", label: "Mehr", icon: "mehr" },
+  { href: "/", label: "katalog", icon: "katalog" },
+  { href: "/serien", label: "serien", icon: "serien" },
+  { href: "/hinzufuegen", label: "hinzufuegen", icon: "hinzufuegen" },
+  { href: "/ausgeliehen", label: "verliehen", icon: "ausgeliehen" },
+  { href: "/mehr", label: "mehr", icon: "mehr" },
 ];
 
 /**

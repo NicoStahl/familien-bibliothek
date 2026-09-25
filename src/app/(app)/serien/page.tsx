@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listeSerien } from "@/lib/buecher";
+import { texte } from "@/lib/i18n/server";
 
 // Übersicht aller Serien im Regal.
 //
@@ -10,7 +11,10 @@ import { listeSerien } from "@/lib/buecher";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Serien — Bücherfuchs" };
+export async function generateMetadata() {
+  const t = await texte();
+  return { title: t.seitentitel(t.serien.titel) };
+}
 
 /** Die fehlenden Nummern zwischen der kleinsten und der größten vorhandenen. */
 function luecken(baende: string | null): number[] {
@@ -29,20 +33,20 @@ function luecken(baende: string | null): number[] {
   return fehlend;
 }
 
-export default function SerienSeite() {
+export default async function SerienSeite() {
+  const t = await texte();
   const serien = listeSerien();
 
   return (
     <div className="px-5 pt-6">
-      <h1 className="titel-gross text-[27px]">Serien</h1>
+      <h1 className="titel-gross text-[27px]">{t.serien.titel}</h1>
       <p className="mt-2 text-sm leading-relaxed text-stein">
-        Alles, was zu einer Reihe gehört — und was dazwischen fehlt.
+        {t.serien.einleitung}
       </p>
 
       {serien.length === 0 ? (
         <p className="mt-10 text-center text-sm text-stein">
-          Noch keine Serie im Regal. Sobald bei einem Buch eine Serie eingetragen ist, taucht
-          sie hier auf.
+          {t.serien.leer}
         </p>
       ) : (
         <ul className="mt-5 divide-y divide-linie-zart border-y border-linie-zart">
@@ -57,9 +61,9 @@ export default function SerienSeite() {
                   <div className="min-w-0 flex-1">
                     <p className="titel-klein text-[16px]">{s.serie}</p>
                     <p className="utility mt-1 text-[9.5px] text-stein">
-                      {s.anzahl === 1 ? "1 Band" : `${s.anzahl} Bände`}
+                      {t.serien.baende(s.anzahl)}
                       {fehlend.length > 0 && (
-                        <span className="text-rost"> · Lücke bei {fehlend.join(", ")}</span>
+                        <span className="text-rost"> · {t.serien.luecke(fehlend.join(", "))}</span>
                       )}
                     </p>
                   </div>

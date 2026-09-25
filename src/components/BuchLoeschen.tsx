@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { entferneBuch } from "@/lib/buchActions";
 import { IconButton, TrashIcon } from "@/components/IconButton";
+import { useTexte } from "@/components/SpracheProvider";
 
 /**
  * Löschen mit Zwischenschritt.
@@ -14,10 +15,11 @@ import { IconButton, TrashIcon } from "@/components/IconButton";
  */
 export function BuchLoeschen({ id, titel }: { id: number; titel: string }) {
   const [fragt, setFragt] = useState(false);
+  const t = useTexte();
 
   if (!fragt) {
     return (
-      <IconButton label={`${titel} löschen`} tone="negativ" onClick={() => setFragt(true)}>
+      <IconButton label={t.buch.loeschen(titel)} tone="negativ" onClick={() => setFragt(true)}>
         <TrashIcon />
       </IconButton>
     );
@@ -31,10 +33,10 @@ export function BuchLoeschen({ id, titel }: { id: number; titel: string }) {
         onClick={() => setFragt(false)}
         className="h-11 rounded-md px-3 text-sm font-semibold text-stein"
       >
-        Abbrechen
+        {t.buch.abbrechen}
       </button>
       <button type="submit" className="h-11 rounded-md bg-rost px-3 text-sm font-semibold text-papier">
-        Wirklich löschen
+        {t.buch.wirklichLoeschen}
       </button>
     </form>
   );
