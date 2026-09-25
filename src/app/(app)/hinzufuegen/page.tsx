@@ -1,0 +1,56 @@
+import Link from "next/link";
+import { Scanner } from "@/components/Scanner";
+import { IsbnEingabe } from "@/components/IsbnEingabe";
+
+// Der primäre Weg ins Regal: Barcode scannen. So steht es im Plan, und so ist die App
+// gedacht — man steht vor dem Regal, nicht vor der Tastatur.
+//
+// Seit dem 05.09.2026 steht darunter die ISBN-Eingabe von Hand. Sie ist kein zweiter, eigener
+// Weg, sondern derselbe: Beide führen auf `/hinzufuegen/erfassen` und damit durch dieselbe
+// Metadaten- und Duplikatprüfung. Gebraucht wird sie, wenn die Nummer zwar dasteht, aber nicht
+// lesbar ist — abgerissener oder überklebter Barcode, zu wenig Licht, schlechte Rechnerkamera,
+// oder die ISBN steht nur im Impressum.
+//
+// Die Reihenfolge auf der Seite ist die Rangfolge: Kamera zuerst, Tastatur darunter, das leere
+// Formular ganz unten. Wer vor dem Regal steht, soll nicht erst an einem Eingabefeld
+// vorbeiscrollen.
+
+export const metadata = { title: "Hinzufügen — Bücherfuchs" };
+
+export default function HinzufuegenSeite() {
+  return (
+    <div className="px-5 pt-6">
+      <h1 className="titel-gross text-[27px]">Buch aufnehmen</h1>
+      <p className="mt-2 text-sm leading-relaxed text-stein">
+        Der Strichcode auf der Rückseite ist die ISBN. Titel, Autor, Verlag und Cover kommen
+        danach von allein.
+      </p>
+
+      <div className="mt-5">
+        <Scanner />
+      </div>
+
+      <div className="mt-6 border-t border-linie-zart pt-4">
+        <p className="text-[13px] leading-relaxed text-stein">
+          Lässt sich der Barcode nicht lesen — abgerissen, überklebt, zu dunkel — geht die ISBN
+          auch von Hand. Sie steht als Ziffernfolge unter dem Strichcode oder im Impressum.
+        </p>
+        <div className="mt-3">
+          <IsbnEingabe />
+        </div>
+      </div>
+
+      <div className="mt-6 border-t border-linie-zart pt-4">
+        <p className="text-[13px] leading-relaxed text-stein">
+          Ältere Bücher und viele Bilderbücher tragen gar keine ISBN.
+        </p>
+        <Link
+          href="/hinzufuegen/manuell"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-lg border border-linie text-base font-semibold text-tinte"
+        >
+          Ohne Barcode eintragen
+        </Link>
+      </div>
+    </div>
+  );
+}

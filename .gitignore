@@ -1,0 +1,21 @@
+/node_modules
+/.next
+/out
+/build
+/data
+*.log
+
+# Heruntergeladene Cover und manuell hochgeladene Buchfotos. Sie entstehen zur Laufzeit neben
+# der Datenbank und gehören nicht ins Repo — gesichert werden sie über Hyper Backup, nicht
+# über Git.
+/cover
+
+# Bewusst `.env*` mit Stern und nicht die einzelnen Namen: Die frühere Fassung listete .env,
+# .env.local und .env*.local auf — eine beim Vorbereiten angelegte .env.nas oder .env.backup
+# wäre damit im Repo gelandet, samt Client-Secret. Ein Muster, das alles fängt, und eine
+# ausdrückliche Ausnahme für die Vorlage ist die sicherere Richtung.
+.env*
+!.env.example
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo

@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+*.log
+.env
+.env.local
+.claude
+
+# Bewusst `data*` und `cover*` mit Stern: In der Riezlern-App rutschte ein Ordner
+# `data-backup-2026-07-25` mit echten Gästedaten in den Build-Kontext, weil das Muster `data`
+# ihn nicht erfasst.
+data*
+cover*
+
+# Entwurfsmaterial: die Schriften liegen für den Build unter src/fonts/, das Mockup wird im
+# Container nicht gebraucht.
+design

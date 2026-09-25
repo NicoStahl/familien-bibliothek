@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      # Nur an Loopback binden: erreichbar bleibt die App über die HTTPS-Reverse-Proxy-Regel
+      # in DSM (buecherfuchs.example.com → localhost:3004), die auf demselben Host
+      # läuft. 3000–3003 sind von Riezlern, Haushaltsrechnung, Umsatzbeteiligung und
+      # Kochkiste belegt.
+      #
+      # Anders als bei Kochkiste braucht die Proxy-Regel hier KEINE erhöhte Zeitgrenze: Es
+      # läuft keine synchrone KI-Erkennung, nur kurze Abfragen an die Buch-APIs.
+      - "127.0.0.1:3004:3000"
+    volumes:
+      - ./data:/app/data
+      - ./cover:/app/cover

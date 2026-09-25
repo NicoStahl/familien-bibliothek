@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/* Palette "Nachtlese" aus dem Umsetzungsplan: Tinten-Blau, Papier-Grau, Messing-Gold.
+   Anders als bei Kochkiste ist die Akzentfarbe hier zugleich die Textfarbe — Tinte auf
+   Papier ist das Bild, von dem die App ihren Namen hat. */
+:root {
+  --papier: #efede8;
+  --tinte: #2b3a4a;
+  --messing: #b8924a;
+
+  /* Abgeleitet, nicht eigenständig entschieden.
+
+     --stein ist mit Bedacht dunkler als Kochkistes Pendant: Auf dem etwas helleren Papier
+     dieser App erreicht er so 4.64:1 gegen den Grund und trägt damit auch die kleinen
+     Metazeilen (ISBN, Verlag, Jahr), die hier die halbe Buchseite ausmachen.
+
+     --rost markiert ausschließlich "verliehen". Eine eigene Farbe, keine Abwandlung des
+     Messings: Der Status muss sich im Grid auf einen Blick von den vier Besitzerfarben
+     unterscheiden, und Gold neben Gold täte das nicht. */
+  --stein: #6b6a63;
+  --rost: #a4462a;
+  --linie: rgba(107, 106, 99, 0.32);
+  --linie-zart: rgba(107, 106, 99, 0.18);
+  --karte: #ffffff;
+}
+
+/* Kein Dunkelmodus, dieselbe Entscheidung wie bei Kochkiste und aus einem verwandten Grund:
+   Ein Cover-Grid lebt davon, dass die Buchdeckel die einzigen Farbflächen sind. Auf dunklem
+   Grund leuchten sie nicht mehr, sie flackern. Bitte nicht "nachrüsten". */
+
+@theme inline {
+  --color-papier: var(--papier);
+  --color-tinte: var(--tinte);
+  --color-messing: var(--messing);
+  --color-stein: var(--stein);
+  --color-rost: var(--rost);
+  --color-linie: var(--linie);
+  --color-linie-zart: var(--linie-zart);
+  --color-karte: var(--karte);
+
+  /* Rollenzuordnung der vier Schriften. Die Quellvariablen kommen aus src/lib/fonts.ts. */
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-publicsans);
+  --font-mono: var(--font-plexmono);
+  --font-hand: var(--font-caveat);
+}
+
+body {
+  background: var(--papier);
+  color: var(--tinte);
+  font-family: var(--font-publicsans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fraunces hat eine optische-Größen-Achse. Große Titel vertragen mehr Strichkontrast,
+   kleine Überschriften brauchen den flacheren Schnitt, sonst franst die Schrift aus. */
+.titel-gross {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "opsz" 144, "wght" 600;
+  letter-spacing: -0.018em;
+  line-height: 1.06;
+}
+
+.titel-klein {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "opsz" 40, "wght" 600;
+  letter-spacing: -0.005em;
+  line-height: 1.16;
+}
+
+/* ISBN, Bandnummern, Jahreszahlen, Filterchips. tabular-nums, damit Zahlenkolonnen
+   untereinander stehen — bei ISBN-Listen der ganze Unterschied zwischen lesbar und Zahlenbrei. */
+.utility {
+  font-family: var(--font-plexmono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Der Ausleihvermerk auf der Buchseite — der einzige handschriftliche Ton der App. */
+.hand {
+  font-family: var(--font-caveat), ui-rounded, cursive;
+  font-size: 1.25em;
+  line-height: 1.2;
+}
+
+/* Feste Leiste am unteren Rand. Der safe-area-Zusatz liefert nur dann einen Wert, wenn im
+   viewport-Export viewportFit: "cover" steht. */
+.tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Inhalt muss über der Leiste enden, sonst verdeckt sie die letzte Zeile. */
+.hat-tabbar {
+  padding-bottom: calc(63px + env(safe-area-inset-bottom));
+}
+
+/* Aufklapp-Elemente ohne das Standard-Dreieck. `list-style: none` (Tailwinds list-none) genügt
+   in Chrome und in Safari ab 16; ältere iOS-Fassungen zeichnen den Marker trotzdem. */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Eingabefelder mindestens 16 px: Darunter zoomt iOS-Safari beim Antippen automatisch in die
+   Seite hinein und lässt den Nutzer in einer verschobenen Ansicht zurück. */
+input,
+textarea,
+select {
+  font-size: max(16px, 1rem);
+}
+
+/* Das Kamerabild des Scanners. Als eigene Regel und nicht als Utility-Klassen, weil beide
+   Angaben zusammengehören: Ohne object-cover verzerrt der Videostrom, und ohne die feste
+   Höhe springt das Bild beim Start der Kamera von 0 auf Vollformat. */
+.scanner-video {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--tinte);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

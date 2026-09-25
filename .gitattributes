@@ -1,0 +1,12 @@
+# Alles im Repo mit Unix-Zeilenenden — auch im Arbeitsverzeichnis unter Windows.
+#
+# Auf diesem Rechner steht core.autocrlf=true. Ohne die Zeile hier bekämen die Dateien beim
+# Auschecken CRLF, und der Bücherfuchs wird in einem Linux-Container gebaut: Ein Dockerfile
+# mit CRLF bricht an den RUN-Fortsetzungen ab, und eine env_file-Zeile nimmt das \r als Teil
+# des Werts mit.
+* text=auto eol=lf
+
+# Binärdateien nicht anfassen.
+*.png   binary
+*.woff2 binary
+*.db    binary
