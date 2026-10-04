@@ -6,6 +6,7 @@ import { AuswahlFeld } from "@/components/AuswahlFeld";
 import { SerieAuswahlFeld } from "@/components/SerieAuswahlFeld";
 import { SerienVorschlagProvider, TitelFeld } from "@/components/SerienVorschlag";
 import { formatiereIsbn } from "@/lib/isbn";
+import { vorschauAdresse } from "@/lib/coverVorschau";
 import { kategorieName } from "@/lib/i18n";
 import { texte } from "@/lib/i18n/server";
 
@@ -58,7 +59,9 @@ export async function BuchFormular({
   knopf: string;
 }) {
   const t = await texte();
-  const vorschau = vorgabe.coverDatei ? `/api/cover/${vorgabe.coverDatei}` : vorgabe.coverUrl;
+  const vorschau = vorgabe.coverDatei
+    ? `/api/cover/${vorgabe.coverDatei}`
+    : vorschauAdresse(vorgabe.coverUrl);
 
   return (
     <form action={action} className="px-5 pb-10 pt-5">

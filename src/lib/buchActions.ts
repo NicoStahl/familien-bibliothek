@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "./auth";
-import { coverUrlAusOpenLibrary } from "./buchapi";
+import { coverUrlAusOpenLibrary, mvbCoverUrl } from "./buchapi";
 import { amazonCoverUrl, ladeCoverHerunter, speichereCoverAusUpload } from "./cover";
 import { normalisiereIsbn } from "./isbn";
 import {
@@ -61,12 +61,21 @@ async function bestimmeCover(formData: FormData): Promise<string | null> {
   // also jedes bearbeitete Buch.
   if (bisher) return bisher;
 
-  // Zwei weitere Stufen, wenn der erste Weg nichts Brauchbares ergeben hat — sei es Googles
+  // Drei weitere Stufen, wenn der erste Weg nichts Brauchbares ergeben hat — sei es Googles
   // Platzhalter, ein toter Link oder gar keine Adresse. Wer den Titel liefert, muss nicht
-  // derselbe sein, der das Bild hat. Beide laufen NUR in diesem Fall, damit kein Scan mit
+  // derselbe sein, der das Bild hat. Alle laufen NUR in diesem Fall, damit kein Scan mit
   // funktionierendem Cover zusätzlich wartet.
   const isbn = normalisiereIsbn(text(formData, "isbn") ?? "");
   if (!isbn) return bisher;
+
+  // Der MVB-Dienst der DNB zuerst: Er hat deutschsprachige Titel fast vollständig, ist
+  // dokumentiert (anders als Amazon) und antwortet auf eine unbekannte ISBN mit 404 statt
+  // einem Pixel — `mvbCoverUrl` prüft das vorab per HEAD.
+  const ausMvb = await mvbCoverUrl(isbn);
+  if (ausMvb) {
+    const geladen = await ladeCoverHerunter(ausMvb);
+    if (geladen) return geladen;
+  }
 
   const ausOpenLibrary = await coverUrlAusOpenLibrary(isbn);
   if (ausOpenLibrary) {

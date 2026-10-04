@@ -6,7 +6,7 @@ import { SerieUmbenennen } from "@/components/SerieUmbenennen";
 import { BuchKachel } from "@/components/BuchKachel";
 import { buecherDerSerie } from "@/lib/buecher";
 import { serienVorschlaege } from "@/lib/buchapi";
-import { stoerungsText } from "@/lib/stoerung";
+import { DIENSTE_BEI_SERIEN, stoerungsText } from "@/lib/stoerung";
 import { texte } from "@/lib/i18n/server";
 
 // Eine Serie: was davon im Regal steht, und darunter unverbindliche Vorschläge, was es sonst
@@ -85,7 +85,7 @@ async function Vorschlaege({
   if (offen.length === 0) {
     // Dieselbe Unterscheidung wie beim Scan: Eine leere Liste, weil die Dienste schweigen, ist
     // keine Aussage über die Serie.
-    const hinweis = stoerungsText(t, stoerungen);
+    const hinweis = stoerungsText(t, stoerungen, DIENSTE_BEI_SERIEN);
     return hinweis ? (
       <p className="mt-4 rounded-lg border border-rost/40 bg-rost/5 p-3 text-sm leading-relaxed text-tinte">
         {hinweis}

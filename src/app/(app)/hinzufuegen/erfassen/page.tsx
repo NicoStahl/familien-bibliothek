@@ -7,7 +7,7 @@ import { metadatenZuIsbn } from "@/lib/buchapi";
 import { findeNachIsbn } from "@/lib/buecher";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { normalisiereIsbn } from "@/lib/isbn";
-import { stoerungsText } from "@/lib/stoerung";
+import { DIENSTE_BEI_ISBN, stoerungsText } from "@/lib/stoerung";
 import { texte } from "@/lib/i18n/server";
 
 // Das vorausgefüllte Formular nach einem Scan.
@@ -39,7 +39,7 @@ export default async function ErfassenSeite({
   // Steht hier ein Satz, war die Frage unbeantwortet — nicht verneint. Der Kopf sagt das dann
   // auch: "Nichts gefunden" wäre eine Behauptung über das Buch, die niemand geprüft hat.
   const t = await texte();
-  const hinweis = stoerungsText(t, stoerungen);
+  const hinweis = stoerungsText(t, stoerungen, DIENSTE_BEI_ISBN);
 
   return (
     <div>

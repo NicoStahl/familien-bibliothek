@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { normalisiereIsbn } from "./isbn";
+import { MVB_COVER } from "./coverVorschau";
 import type { Dienst, Dienststoerung, Stoerungsart } from "./stoerung";
 
 // Metadaten-Abruf bei den beiden kostenlosen Buch-APIs aus dem Plan. Keiner der beiden
@@ -10,11 +11,16 @@ import type { Dienst, Dienststoerung, Stoerungsart } from "./stoerung";
 // Google fällt für deutsche Titel praktisch alles aus, weil Open Library dort dünn ist.
 // `GOOGLE_BOOKS_API_KEY` ist deshalb formal optional und praktisch nötig.
 //
-// Reihenfolge: erst Google Books, dann Open Library. Google hat bei deutschsprachigen Titeln
-// die deutlich bessere Abdeckung und liefert fast immer ein Cover; Open Library springt ein,
-// wo Google nichts kennt (ältere und kleinere Verlage). Der Aufruf läuft NUR auf dem Server,
-// nie im Browser: So bleibt der Zugriff hinter der Anmeldung, und die Cover lassen sich in
-// derselben Anfrage gleich lokal ablegen.
+// Reihenfolge: Google Books, dann die Deutsche Nationalbibliothek, dann Open Library. Der Aufruf
+// läuft NUR auf dem Server, nie im Browser: So bleibt der Zugriff hinter der Anmeldung, und die
+// Cover lassen sich in derselben Anfrage gleich lokal ablegen.
+//
+// Die DNB kam am 04.10.2026 dazu, weil Googles `isbn:`-Suche seit Kurzem für JEDE Nummer
+// `totalItems: 0` liefert — mit gültigem Schlüssel, Status 200 und ohne Fehlermeldung, während
+// die Titelsuche mit demselben Schlüssel normal antwortet. Open Library allein fing das nicht
+// auf: Bei deutschen Titeln fehlt dort zu viel. Die DNB führt dagegen praktisch jedes in
+// Deutschland erschienene Buch, braucht keinen Schlüssel und hat mit dem MVB-Dienst auch Cover.
+// Google bleibt vorn, falls es die Suche wieder repariert — die Anfrage kostet eine Drittelsekunde.
 //
 // Die Antworten sind fremde, unversionierte JSON-Strukturen. Deshalb geht alles durch Zod:
 // Was nicht ins Schema passt, fehlt eben — ein fehlender Verlag darf keine Erfassung
@@ -28,13 +34,16 @@ export type BuchTreffer = {
   /** Fremde Adresse. Wird von cover.ts heruntergeladen, nicht gespeichert. */
   coverUrl: string | null;
   isbn: string | null;
-  quelle: "google" | "openlibrary";
+  quelle: "google" | "dnb" | "openlibrary";
 };
 
 const ZEITGRENZE_MS = 8000;
 
 /** Antwort eines Verzeichnisses: entweder Daten, oder ein benannter Grund für ihr Ausbleiben. */
-type Abruf = { art: "daten"; daten: unknown } | { art: "stoerung"; stoerung: Stoerungsart };
+type Abruf<T = unknown> = { art: "daten"; daten: T } | { art: "stoerung"; stoerung: Stoerungsart };
+
+/** Open Library bittet ausdrücklich um eine identifizierbare Kennung samt Kontaktweg. */
+const KENNUNG = "Buecherfuchs/0.9 (privater Familienkatalog)";
 
 /**
  * Holt JSON und übersetzt jedes Problem in einen benennbaren Grund. Keine API-Störung darf die
@@ -50,15 +59,16 @@ type Abruf = { art: "daten"; daten: unknown } | { art: "stoerung"; stoerung: Sto
  * bewusst "ausfall": Ein falsch eingetragener Schlüssel etwa liefert 400 oder 403, und den
  * Nutzer dann aufs Kontingent zu verweisen, würde die Suche in die falsche Richtung schicken.
  */
-async function holeJson(url: string): Promise<Abruf> {
+async function hole(url: string, format: "json"): Promise<Abruf>;
+async function hole(url: string, format: "xml"): Promise<Abruf<string>>;
+async function hole(url: string, format: "json" | "xml"): Promise<Abruf> {
   try {
     const res = await fetch(url, {
       cache: "no-store",
       signal: AbortSignal.timeout(ZEITGRENZE_MS),
       headers: {
-        accept: "application/json",
-        // Open Library bittet ausdrücklich um eine identifizierbare Kennung samt Kontaktweg.
-        "user-agent": "Buecherfuchs/0.1 (privater Familienkatalog)",
+        accept: format === "json" ? "application/json" : "application/xml",
+        "user-agent": KENNUNG,
       },
     });
     if (!res.ok) {
@@ -66,12 +76,14 @@ async function holeJson(url: string): Promise<Abruf> {
       console.warn(`Buch-API antwortete mit ${res.status}: ${new URL(url).host}`);
       return { art: "stoerung", stoerung: res.status === 429 ? "kontingent" : "ausfall" };
     }
-    return { art: "daten", daten: await res.json() };
+    return { art: "daten", daten: format === "json" ? await res.json() : await res.text() };
   } catch (fehler) {
     console.warn(`Buch-API nicht erreichbar (${new URL(url).host}):`, fehler);
     return { art: "stoerung", stoerung: "ausfall" };
   }
 }
+
+const holeJson = (url: string) => hole(url, "json");
 
 /**
  * Eine Antwort, die nicht ins Schema passt, ist ein Ausfall des Dienstes — kein fehlender
@@ -239,10 +251,168 @@ async function openLibraryNachIsbn(isbn13: string): Promise<Abfrage> {
   };
 }
 
+/** Die fünf vordefinierten XML-Entitäten und numerische Zeichenreferenzen. */
+function xmlText(roh: string): string {
+  return roh
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dez: string) => String.fromCodePoint(Number(dez)))
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .trim();
+}
+
+/** Alle Werte eines Dublin-Core-Felds aus einem DNB-Datensatz, z. B. `creator`. */
+function dcFelder(datensatz: string, feld: string): string[] {
+  const muster = new RegExp(`<dc:${feld}(?:\\s[^>]*)?>([^<]*)</dc:${feld}>`, "g");
+  return [...datensatz.matchAll(muster)].map((m) => xmlText(m[1])).filter(Boolean);
+}
+
+/**
+ * „Unser Schiff : eine Bilderbuch-Reise mit Suchspiel / Antje von Stemm" → „Unser Schiff. Eine
+ * Bilderbuch-Reise mit Suchspiel".
+ *
+ * Die DNB liefert den Titel nach Katalogregeln: Hinter „ / " folgt die Verantwortlichkeit
+ * (Autor, Übersetzer, Herausgeber — die stehen sauberer in `creator`), hinter „ : " der
+ * Untertitel. Daraus wird dieselbe Form, die Google liefert. Das „¬" klammert in Katalogdaten
+ * Artikel ein, die beim Sortieren übersprungen werden („¬Der¬ kleine Prinz").
+ */
+function dnbTitel(roh: string): string {
+  const ohneVerantwortung = roh.split(" / ")[0].replace(/¬/g, "");
+  const [haupt, ...unter] = ohneVerantwortung.split(" : ").map((s) => s.trim());
+  const untertitel = unter.join(": ");
+  if (!untertitel) return haupt;
+  return `${haupt}. ${untertitel.charAt(0).toUpperCase()}${untertitel.slice(1)}`;
+}
+
+/**
+ * Die Autoren aus den `creator`-Feldern, als „Vorname Nachname".
+ *
+ * Jeder Eintrag trägt seine Rolle in eckigen Klammern: „Rowling, J. K. [Verfasser]",
+ * „Fritz, Klaus [Übersetzer]". Genommen werden die Verfasser; fehlen sie (Anthologien), die
+ * Herausgeber; erst dann Einträge ohne Rolle. Übersetzer und Illustratoren nie — die gehören
+ * nicht in die Autorzeile.
+ *
+ * Die Namen sind die normierte Form der Normdatei. Bei Übersetzungen aus dem Kyrillischen weicht
+ * die Umschrift deshalb vom Buchdeckel ab (Ulickaja statt Ulitzkaja) — korrigierbar im Formular.
+ */
+function dnbAutoren(creators: string[]): string | null {
+  const zerlegt = creators.map((c) => {
+    const m = /^(.*?)\s*\[([^\]]+)\]\s*$/.exec(c);
+    return m ? { name: m[1], rolle: m[2] } : { name: c, rolle: null };
+  });
+  const auswahl = [
+    zerlegt.filter((c) => c.rolle === "Verfasser"),
+    zerlegt.filter((c) => c.rolle === "Herausgeber"),
+    zerlegt.filter((c) => c.rolle === null),
+  ].find((liste) => liste.length > 0);
+  if (!auswahl) return null;
+
+  return auswahl
+    .map(({ name }) => {
+      const [nach, vor] = name.split(/,\s*/, 2);
+      return vor ? `${vor} ${nach}` : nach;
+    })
+    .join(", ");
+}
+
+/** „Hamburg : Carlsen" → „Carlsen". Bei mehreren Verlagen („A : X ; B : Y") nur der erste. */
+function dnbVerlag(roh: string | undefined): string | null {
+  if (!roh) return null;
+  const erster = roh.split(" ; ")[0];
+  const name = erster.includes(" : ") ? erster.split(" : ").slice(1).join(" : ") : erster;
+  return name.trim() || null;
+}
+
+/**
+ * Cover-Adresse beim MVB-Dienst der DNB, oder null, wenn es dort keines gibt.
+ *
+ * Anders als Open Library und Amazon antwortet der Dienst auf eine unbekannte ISBN ehrlich mit
+ * 404 statt mit einem 1×1-Pixel — eine HEAD-Anfrage genügt also, um vorab zu wissen, ob es ein
+ * Bild gibt. Das ist nötig, weil Scan-Karte und Formular die Vorschau als `<img>` zeigen; ohne
+ * die Prüfung stünde dort bei jedem Buch ohne Cover ein kaputtes Bildsymbol.
+ *
+ * Die eigene Kennung im User-Agent ist hier keine Höflichkeit: Der Dienst steht hinter einem
+ * Bot-Schutz, der allen „Mozilla"-Kennungen eine Prüfseite statt des Bildes schickt.
+ */
+export async function mvbCoverUrl(isbn13: string): Promise<string | null> {
+  const url = `${MVB_COVER}${isbn13}`;
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+      headers: { "user-agent": KENNUNG },
+    });
+    return res.ok && (res.headers.get("content-type") ?? "").startsWith("image/") ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Das MVB-Cover als Bytes, für die Vorschau-Route. Null bei 404, Störung oder Nicht-Bild. */
+export async function ladeMvbCover(isbn13: string): Promise<{ daten: Buffer; typ: string } | null> {
+  try {
+    const res = await fetch(`${MVB_COVER}${isbn13}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(ZEITGRENZE_MS),
+      headers: { "user-agent": KENNUNG },
+    });
+    const typ = (res.headers.get("content-type") ?? "").split(";")[0];
+    if (!res.ok || !typ.startsWith("image/")) return null;
+    return { daten: Buffer.from(await res.arrayBuffer()), typ };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fragt die Deutsche Nationalbibliothek nach einer ISBN (SRU-Schnittstelle, Dublin Core).
+ *
+ * Kein Schlüssel, kein Kontingent. Die Antwort ist XML; ein XML-Parser als Abhängigkeit lohnt
+ * für die vier flachen Felder nicht. Fehlt `numberOfRecords`, ist die Antwort keine SRU-Antwort
+ * und wird als Ausfall gemeldet, nicht als „unbekannt".
+ */
+async function dnbNachIsbn(isbn13: string): Promise<Abfrage> {
+  const abruf = await hole(
+    `https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve` +
+      `&query=num%3D${isbn13}&recordSchema=oai_dc&maximumRecords=1`,
+    "xml"
+  );
+  if (abruf.art === "stoerung") {
+    return { treffer: null, stoerung: { dienst: "DNB", art: abruf.stoerung } };
+  }
+
+  const anzahl = /<numberOfRecords>(\d+)<\/numberOfRecords>/.exec(abruf.daten);
+  if (!anzahl) return { treffer: null, stoerung: formfehler("DNB") };
+  if (anzahl[1] === "0") return { treffer: null, stoerung: null };
+
+  const datensatz = /<record>([\s\S]*?)<\/record>/.exec(abruf.daten)?.[1] ?? "";
+  const rohTitel = dcFelder(datensatz, "title")[0];
+  if (!rohTitel) return { treffer: null, stoerung: null };
+
+  const jahr = /\d{4}/.exec(dcFelder(datensatz, "date")[0] ?? "")?.[0];
+
+  return {
+    treffer: {
+      titel: dnbTitel(rohTitel),
+      autor: dnbAutoren(dcFelder(datensatz, "creator")),
+      verlag: dnbVerlag(dcFelder(datensatz, "publisher")[0]),
+      jahr: jahrAus(jahr),
+      coverUrl: await mvbCoverUrl(isbn13),
+      isbn: isbn13,
+      quelle: "dnb",
+    },
+    stoerung: null,
+  };
+}
+
 /**
  * Was die Verzeichnisse zu einer ISBN sagen.
  *
- * `treffer: null` bei leerem `stoerungen` heißt: Beide Dienste haben geantwortet und kennen
+ * `treffer: null` bei leerem `stoerungen` heißt: Alle Dienste haben geantwortet und kennen
  * das Buch nicht — dann greift der im Plan vorgesehene Fallback, also das Formular von Hand.
  * Steht dagegen etwas in `stoerungen`, ist die Frage schlicht unbeantwortet geblieben, und
  * das ist etwas völlig anderes.
@@ -252,29 +422,31 @@ export type IsbnAuskunft = { treffer: BuchTreffer | null; stoerungen: Dienststoe
 /**
  * Sucht die Metadaten zu einer ISBN.
  *
- * Die beiden Abfragen laufen NACHEINANDER, nicht parallel: Google trifft in der Regel, und
- * dann ist die zweite Anfrage samt Wartezeit gespart. Bei einem Stapel gescannter Bücher
- * summiert sich das.
+ * Die Abfragen laufen NACHEINANDER, nicht parallel: Wer trifft, erspart den übrigen die
+ * Wartezeit. Bei einem Stapel gescannter Bücher summiert sich das.
+ *
+ * DNB vor Open Library, weil sie deutschsprachige Titel nahezu vollständig führt und Open Library
+ * dort dünn ist. Englische Ausgaben (978-0, 978-1) kennt die DNB meist nicht; für die bleibt
+ * Open Library als dritte Stufe.
  *
  * Gibt es am Ende einen Treffer, bleibt `stoerungen` leer — dass Google unterwegs gestreikt
- * hat, interessiert niemanden mehr, wenn Open Library das Buch gefunden hat. Gemeldet wird
- * nur, was das Ergebnis tatsächlich beeinträchtigt hat.
+ * hat, interessiert niemanden mehr, wenn die DNB das Buch gefunden hat. Gemeldet wird nur, was
+ * das Ergebnis tatsächlich beeinträchtigt hat.
  */
 export async function metadatenZuIsbn(eingabe: string): Promise<IsbnAuskunft> {
   const isbn13 = normalisiereIsbn(eingabe);
   if (!isbn13) return { treffer: null, stoerungen: [] };
 
-  const google = await googleNachIsbn(isbn13);
-  if (google.treffer) return { treffer: google.treffer, stoerungen: [] };
-
-  const openLibrary = await openLibraryNachIsbn(isbn13);
-  if (openLibrary.treffer) return { treffer: openLibrary.treffer, stoerungen: [] };
+  const abfragen: Abfrage[] = [];
+  for (const frage of [googleNachIsbn, dnbNachIsbn, openLibraryNachIsbn]) {
+    const antwort = await frage(isbn13);
+    if (antwort.treffer) return { treffer: antwort.treffer, stoerungen: [] };
+    abfragen.push(antwort);
+  }
 
   return {
     treffer: null,
-    stoerungen: [google.stoerung, openLibrary.stoerung].filter(
-      (s): s is Dienststoerung => s !== null
-    ),
+    stoerungen: abfragen.map((a) => a.stoerung).filter((s): s is Dienststoerung => s !== null),
   };
 }
 

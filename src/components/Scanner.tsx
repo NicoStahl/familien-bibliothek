@@ -16,7 +16,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { normalisiereIsbn } from "@/lib/isbn";
-import { stoerungsText, type Dienststoerung } from "@/lib/stoerung";
+import { vorschauAdresse } from "@/lib/coverVorschau";
+import { DIENSTE_BEI_ISBN, stoerungsText, type Dienststoerung } from "@/lib/stoerung";
 import { useTexte } from "@/components/SpracheProvider";
 import type { Woerterbuch } from "@/lib/i18n";
 
@@ -213,7 +214,7 @@ function FundKarte({ fund, weiter, t }: { fund: Fund; weiter: () => void; t: Woe
   // Warum nichts dasteht — oder null, wenn "kennt keiner" die ganze Wahrheit ist.
   const hinweis = abfrageGescheitert
     ? t.scanner.abfrageGescheitert
-    : stoerungsText(t, stoerungen);
+    : stoerungsText(t, stoerungen, DIENSTE_BEI_ISBN);
 
   return (
     <div className="rounded-xl border border-linie bg-karte p-4">
@@ -248,7 +249,7 @@ function FundKarte({ fund, weiter, t }: { fund: Fund; weiter: () => void; t: Woe
         {treffer?.coverUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={treffer.coverUrl}
+            src={vorschauAdresse(treffer.coverUrl) ?? undefined}
             alt=""
             className="h-[96px] w-16 shrink-0 rounded object-cover shadow-[0_1px_3px_rgba(43,58,74,.2)]"
           />

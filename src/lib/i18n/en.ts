@@ -49,9 +49,9 @@ export const en: Woerterbuch = {
   stoerung: {
     kontingent: (dienst) => `${dienst} has used up its daily quota`,
     ausfall: (dienst) => `${dienst} did not respond`,
-    beide: (teile) => `Whether this book is known can't be said right now: ${teile}.`,
-    einer: (teile) =>
-      `The book may be known after all: ${teile}, so only the other service could be asked.`,
+    alle: (teile) => `Whether this book is known can't be said right now: ${teile}.`,
+    teils: (teile) =>
+      `The book may be known after all: ${teile}, and the other services don't know it.`,
     spaeter: "Try again later — or enter the details by hand now.",
     schluessel:
       "Your own Google Books key (GOOGLE_BOOKS_API_KEY in the .env) fixes this for good.",

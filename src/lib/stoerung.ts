@@ -15,7 +15,15 @@
 
 import type { Woerterbuch } from "@/lib/i18n";
 
-export type Dienst = "Google Books" | "Open Library";
+export type Dienst = "Google Books" | "DNB" | "Open Library";
+
+/**
+ * Wie viele Verzeichnisse eine ISBN-Abfrage befragt, bevor sie aufgibt (Google, DNB, Open
+ * Library). Die Serien-Vorschläge fragen nur zwei — die DNB kennt keine Serien-Suche, die
+ * sich mit den anderen vergleichen ließe.
+ */
+export const DIENSTE_BEI_ISBN = 3;
+export const DIENSTE_BEI_SERIEN = 2;
 
 export type Stoerungsart =
   /** HTTP 429 — ohne eigenen Schlüssel teilt sich Google Books ein Kontingent mit aller Welt. */
@@ -32,19 +40,23 @@ function grund(t: Woerterbuch, stoerung: Dienststoerung): string {
 }
 
 /**
- * Ein Satz, der sagt, warum nichts gefunden wurde — oder `null`, wenn beide Dienste sauber
+ * Ein Satz, der sagt, warum nichts gefunden wurde — oder `null`, wenn alle Dienste sauber
  * geantwortet haben und die ISBN ihnen schlicht unbekannt ist. Nur im zweiten Fall ist
  * „Nichts gefunden" die ganze Wahrheit.
  *
- * Die Liste enthält ausschließlich Fehlschläge. Steht genau eine Störung darin, hat der
- * andere Dienst also geantwortet und das Buch nicht gekannt — dann ist der Fund noch offen,
- * aber nicht ausgeschlossen. Stehen zwei darin, wurde faktisch nichts gefragt.
+ * Die Liste enthält ausschließlich Fehlschläge. Sind es weniger als befragte Dienste, hat
+ * mindestens einer geantwortet und das Buch nicht gekannt — dann ist der Fund noch offen,
+ * aber nicht ausgeschlossen. Sind alle gestört, wurde faktisch nichts gefragt.
  */
-export function stoerungsText(t: Woerterbuch, stoerungen: Dienststoerung[]): string | null {
+export function stoerungsText(
+  t: Woerterbuch,
+  stoerungen: Dienststoerung[],
+  befragt: number
+): string | null {
   if (stoerungen.length === 0) return null;
 
   const teile = stoerungen.map((s) => grund(t, s)).join(", ");
-  const kopf = stoerungen.length >= 2 ? t.stoerung.beide(teile) : t.stoerung.einer(teile);
+  const kopf = stoerungen.length >= befragt ? t.stoerung.alle(teile) : t.stoerung.teils(teile);
 
   const rat = stoerungen.some((s) => s.art === "kontingent") ? t.stoerung.schluessel : null;
 

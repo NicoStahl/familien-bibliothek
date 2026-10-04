@@ -56,9 +56,9 @@ export const de = {
   stoerung: {
     kontingent: (dienst: string) => `${dienst} hat sein Tageskontingent erschöpft`,
     ausfall: (dienst: string) => `${dienst} hat nicht geantwortet`,
-    beide: (teile: string) => `Ob dieses Buch bekannt ist, lässt sich gerade nicht sagen: ${teile}.`,
-    einer: (teile: string) =>
-      `Das Buch ist womöglich doch bekannt: ${teile}, gefragt werden konnte nur der zweite Dienst.`,
+    alle: (teile: string) => `Ob dieses Buch bekannt ist, lässt sich gerade nicht sagen: ${teile}.`,
+    teils: (teile: string) =>
+      `Das Buch ist womöglich doch bekannt: ${teile}, die übrigen Dienste kennen es nicht.`,
     spaeter: "Später noch einmal versuchen — oder die Angaben jetzt von Hand eintragen.",
     schluessel:
       "Ein eigener Google-Books-Schlüssel (GOOGLE_BOOKS_API_KEY in der .env) beendet das dauerhaft.",

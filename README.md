@@ -5,8 +5,8 @@
 **Deutsch** · [English](#english)
 
 Eine Familienbibliothek für den eigenen Server. Bücher werden per Barcode-Scan mit der
-Handy-Kamera erfasst; Titel, Autor, Verlag und Cover kommen von Google Books und Open Library.
-Gedacht für den Betrieb im Heimnetz, etwa auf einer Synology-NAS mit Docker — die Daten
+Handy-Kamera erfasst; Titel, Autor, Verlag und Cover kommen von Google Books, der Deutschen
+Nationalbibliothek und Open Library. Gedacht für den Betrieb im Heimnetz, etwa auf einer Synology-NAS mit Docker — die Daten
 verlassen das Haus nicht.
 
 Die Oberfläche gibt es auf Deutsch und Englisch. Sie ist fürs Handy gebaut, funktioniert aber
@@ -20,8 +20,10 @@ auch am Rechner.
   Buch ganz ohne ISBN eintragen
 - **ISBN-Normalisierung** (ISBN-10 → ISBN-13, Prüfziffern) und eine Duplikat-Warnung, die nicht
   blockiert — zwei Geschwister dürfen dasselbe Buch je einmal besitzen
-- **Cover-Kette** Google Books → Open Library → Amazon, mit Erkennung der Platzhalterbilder
-  („Bild nicht verfügbar"); eigene Fotos lassen sich hochladen
+- **Metadaten-Kette** Google Books → Deutsche Nationalbibliothek → Open Library; die DNB führt
+  praktisch jedes in Deutschland erschienene Buch und braucht keinen Schlüssel
+- **Cover-Kette** Google Books → DNB/MVB → Open Library → Amazon, mit Erkennung der
+  Platzhalterbilder („Bild nicht verfügbar"); eigene Fotos lassen sich hochladen
 - **Serien** mit Lückenanzeige, Umbenennen und automatischer Erkennung aus dem eigenen Katalog
 - **Ausleihe:** an wen, seit wann, und eine Liste aller verliehenen Bücher
 - **CSV-Export**
@@ -64,7 +66,7 @@ frei: am Rechner über `localhost`, am Handy erst über HTTPS.
 | `ADMIN_USERNAMES` | Kommagetrennt. Leer = der zuerst angemeldete Nutzer wird Admin. |
 | `BESITZER` | Wem die Bücher gehören, z. B. `Anna,Ben,Clara`. Optional mit Badge-Farbe: `Clara:#8A4B62`. Leer = ein Besitzer „Familie". |
 | `SPRACHE` | `de` oder `en`. Leer = Sprache des Browsers, sonst Deutsch. Die Wahl unter „Mehr“ geht immer vor. |
-| `GOOGLE_BOOKS_API_KEY` | Optional, aber empfohlen: Ohne Schlüssel teilt man sich ein anonymes Kontingent, das oft erschöpft ist. Ein kostenloser Schlüssel (Google Cloud Console, Books API) reicht für 1000 Abfragen am Tag. |
+| `GOOGLE_BOOKS_API_KEY` | Optional. Ohne Schlüssel teilt man sich ein anonymes Kontingent, das oft erschöpft ist; ein kostenloser Schlüssel (Google Cloud Console, Books API) reicht für 1000 Abfragen am Tag. Seit Oktober 2026 liefert Googles ISBN-Suche allerdings auch mit Schlüssel keine Treffer — deutsche Titel kommen dann von der DNB, die keinen Schlüssel braucht. |
 
 **Besitzer und Anmeldung sind zwei verschiedene Dinge.** Angemeldet wird sich per OIDC; der
 Besitzer ist nur eine Eigenschaft des Buchs. Kinder brauchen also kein eigenes Konto.
@@ -104,20 +106,21 @@ SSO-Client-Anwendung", und zwar erst beim Token-Austausch.
   `ca-certificates` mit abgeschalteter Peer-Prüfung, weil das Basisimage in der ursprünglichen
   Umgebung keine Zertifikate mitbrachte. Wer in einer normalen Umgebung baut, kann die
   `-o Acquire::https::Verify-*`- und `--allow-unauthenticated`-Optionen entfernen.
-- **Die Amazon-Cover-Stufe nutzt eine undokumentierte Bildadresse.** Sie greift nur, wenn Google
-  und Open Library kein Bild haben. Für einen privaten Katalog ist das folgenlos; wer das nicht
+- **Die Amazon-Cover-Stufe nutzt eine undokumentierte Bildadresse.** Sie greift nur, wenn Google,
+  die DNB und Open Library kein Bild haben. Für einen privaten Katalog ist das folgenlos; wer das nicht
   möchte, entfernt `amazonCoverUrl()` aus `src/lib/cover.ts`.
 
 ## Aufbau
 
 ```
 src/lib/       db.ts (SQLite), schema.ts (Datenmodell), auth.ts + oidc.ts (Anmeldung)
-               isbn.ts (Normalisierung, Prüfziffern), buchapi.ts (Google Books / Open Library)
+               isbn.ts (Normalisierung, Prüfziffern), buchapi.ts (Google Books / DNB / Open Library)
                buecher.ts (CRUD, Duplikat-Suche, Serien), suche.ts (Filter), cover.ts (Ablage)
                kategorien.ts (feste Liste), besitzer.ts (aus BESITZER), csv.ts, datum.ts
                i18n/ (Wörterbücher de.ts und en.ts, Sprachwahl)
 src/app/(app)/ alles hinter der Anmeldung, mit Tab-Leiste
-src/app/api/   auth/, cover/ (Bildauslieferung), isbn/ (Scanner-Abfrage), export/ (CSV)
+src/app/api/   auth/, cover/ (Bildauslieferung), cover-vorschau/ (DNB-Cover durchgereicht),
+               isbn/ (Scanner-Abfrage), export/ (CSV)
 src/fonts/     Fraunces, Public Sans, IBM Plex Mono, Caveat — selbst ausgeliefert
 design/        Farbpalette, Typografie und App-Icon
 ```
@@ -135,7 +138,8 @@ design/        Farbpalette, Typografie und App-Icon
 [Deutsch](#deutsch) · **English**
 
 A family library for your own server. Books are added by scanning their barcode with a phone
-camera; title, author, publisher and cover come from Google Books and Open Library. Meant to
+camera; title, author, publisher and cover come from Google Books, the German National Library
+(DNB) and Open Library. Meant to
 run on a home network, for example on a Synology NAS with Docker — the data never leaves the
 house.
 
@@ -150,8 +154,10 @@ computer too. The name is German for "book fox".
   without any ISBN
 - **ISBN normalisation** (ISBN-10 → ISBN-13, check digits) and a duplicate warning that doesn't
   block — two siblings may each own the same book
-- **Cover chain** Google Books → Open Library → Amazon, detecting "image not available"
-  placeholders; you can also upload your own photo
+- **Metadata chain** Google Books → German National Library → Open Library; the DNB lists
+  practically every book published in Germany and needs no key
+- **Cover chain** Google Books → DNB/MVB → Open Library → Amazon, detecting "image not
+  available" placeholders; you can also upload your own photo
 - **Series** with gap detection, renaming, and automatic matching against your own catalogue
 - **Lending:** to whom, since when, and a list of all books currently lent out
 - **CSV export**
@@ -194,7 +200,7 @@ Copy `.env.example` to `.env` and fill it in. The file is not committed.
 | `ADMIN_USERNAMES` | Comma-separated. Empty = the first user to sign in becomes admin. |
 | `BESITZER` | Who owns the books, e.g. `Anna,Ben,Clara`. Optionally with a badge colour: `Clara:#8A4B62`. Empty = a single owner called "Familie". |
 | `SPRACHE` | `de` or `en`. Empty = the browser's language, otherwise German. The choice under "More" always wins. |
-| `GOOGLE_BOOKS_API_KEY` | Optional but recommended: without a key you share an anonymous quota that is often exhausted. A free key (Google Cloud Console, Books API) allows 1000 requests a day. |
+| `GOOGLE_BOOKS_API_KEY` | Optional. Without a key you share an anonymous quota that is often exhausted; a free key (Google Cloud Console, Books API) allows 1000 requests a day. Since October 2026, however, Google's ISBN search returns no results even with a key — German titles then come from the DNB, which needs no key. |
 
 **Owners and sign-in are two different things.** Sign-in goes through OIDC; the owner is just
 a property of the book. Children don't need an account.
@@ -233,8 +239,8 @@ exchange.
   peer verification switched off, because the base image had no certificates in the original
   environment. In a normal environment you can drop the `-o Acquire::https::Verify-*` and
   `--allow-unauthenticated` options.
-- **The Amazon cover step uses an undocumented image URL.** It only kicks in when Google and
-  Open Library have no image. For a private catalogue that's harmless; if you'd rather not,
+- **The Amazon cover step uses an undocumented image URL.** It only kicks in when Google, the
+  DNB and Open Library have no image. For a private catalogue that's harmless; if you'd rather not,
   remove `amazonCoverUrl()` from `src/lib/cover.ts`.
 - **The code is written in German** — identifiers and comments alike.
 
