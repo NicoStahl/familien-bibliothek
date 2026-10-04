@@ -66,7 +66,7 @@ export async function AusleihFormular({
               type="text"
               required
               placeholder={t.ausleihe.anWenPlatzhalter}
-              className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte"
+              className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte"
             />
           </div>
           <div>
@@ -78,7 +78,7 @@ export async function AusleihFormular({
               name="ausgeliehen_am"
               type="date"
               defaultValue={heute()}
-              className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte"
+              className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte"
             />
           </div>
         </div>

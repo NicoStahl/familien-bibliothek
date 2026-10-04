@@ -6,6 +6,13 @@ import { holeBuch } from "@/lib/buecher";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { texte } from "@/lib/i18n/server";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const t = await texte();
+  const buch = holeBuch(Number(id));
+  return { title: t.seitentitel(buch ? `${buch.titel} (${t.buch.bearbeiten})` : t.buch.bearbeitenTitel) };
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function BearbeitenSeite({ params }: { params: Promise<{ id: string }> }) {

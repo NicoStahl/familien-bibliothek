@@ -66,7 +66,7 @@ export function IsbnEingabe() {
           }}
           aria-invalid={fehler !== null}
           aria-describedby={fehler ? "isbn-fehler" : undefined}
-          className="h-12 min-w-0 flex-1 rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte"
+          className="h-12 min-w-0 flex-1 rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte"
         />
         <button
           type="submit"

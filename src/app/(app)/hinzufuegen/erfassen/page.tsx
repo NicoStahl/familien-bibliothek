@@ -10,6 +10,11 @@ import { normalisiereIsbn } from "@/lib/isbn";
 import { DIENSTE_BEI_ISBN, stoerungsText } from "@/lib/stoerung";
 import { texte } from "@/lib/i18n/server";
 
+export async function generateMetadata() {
+  const t = await texte();
+  return { title: t.seitentitel(t.hinzufuegen.reiter) };
+}
+
 // Das vorausgefüllte Formular nach einem Scan.
 //
 // Die Metadaten werden hier ein zweites Mal geholt, obwohl der Scanner sie schon einmal

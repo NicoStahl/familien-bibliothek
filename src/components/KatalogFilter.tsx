@@ -86,7 +86,7 @@ export function KatalogFilter({ serien, besitzer }: { serien: string[]; besitzer
           placeholder={t.filter.suchePlatzhalter}
           aria-label={t.filter.sucheLabel}
           autoComplete="off"
-          className="h-12 w-full rounded-lg border border-linie bg-karte pl-10 pr-3 text-base outline-none focus:border-tinte"
+          className="h-12 w-full rounded-lg border border-linie bg-karte pl-10 pr-3 text-base outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte"
         />
       </div>
 

@@ -47,7 +47,7 @@ export function SerieUmbenennen({ name }: { name: string }) {
         defaultValue={name}
         required
         autoFocus
-        className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 text-base outline-none focus:border-tinte"
+        className="mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 text-base outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte"
       />
       <p className="mt-1.5 text-[12px] leading-relaxed text-stein">
         {t.serien.umbenennenHinweis}

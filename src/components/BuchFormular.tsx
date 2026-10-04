@@ -47,7 +47,7 @@ export type Vorgabe = {
 
 const LABEL = "utility block text-[10px] text-stein";
 const EINGABE =
-  "mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte";
+  "mt-1.5 h-12 w-full rounded-lg border border-linie bg-karte px-3 outline-none focus:border-tinte focus-visible:ring-2 focus-visible:ring-tinte";
 
 export async function BuchFormular({
   action,

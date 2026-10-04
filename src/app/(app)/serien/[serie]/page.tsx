@@ -9,6 +9,12 @@ import { serienVorschlaege } from "@/lib/buchapi";
 import { DIENSTE_BEI_SERIEN, stoerungsText } from "@/lib/stoerung";
 import { texte } from "@/lib/i18n/server";
 
+export async function generateMetadata({ params }: { params: Promise<{ serie: string }> }) {
+  const { serie } = await params;
+  const t = await texte();
+  return { title: t.seitentitel(decodeURIComponent(serie)) };
+}
+
 // Eine Serie: was davon im Regal steht, und darunter unverbindliche Vorschläge, was es sonst
 // noch geben könnte.
 //

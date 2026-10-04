@@ -12,7 +12,7 @@ export const en: Woerterbuch = {
   sprache: "en",
   sprachname: "English",
   appBeschreibung: "The family library with a barcode scanner",
-  seitentitel: (seite) => `${seite} — Bücherfuchs`,
+  seitentitel: (seite) => `${seite} · Bücherfuchs`,
 
   nav: {
     hauptnavigation: "Main navigation",
@@ -101,7 +101,8 @@ export const en: Woerterbuch = {
     bearbeitenTitel: "Edit book",
     loeschen: (titel) => `Delete ${titel}`,
     abbrechen: "Cancel",
-    wirklichLoeschen: "Really delete",
+    loeschenFrage: (titel) => `Delete ${titel}? The cover image goes with it.`,
+    jaLoeschen: "Yes, delete",
     aenderungenSpeichern: "Save changes",
   },
 

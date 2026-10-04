@@ -11,6 +11,13 @@ import { formatiereIsbn } from "@/lib/isbn";
 import { kategorieName } from "@/lib/i18n";
 import { texte } from "@/lib/i18n/server";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const t = await texte();
+  const buch = holeBuch(Number(id));
+  return { title: buch ? t.seitentitel(buch.titel) : t.seitentitel(t.buch.bearbeitenTitel) };
+}
+
 // Die Buchseite. Hier steht alles, was im Grid bewusst NICHT steht — Titel, Autor, Serie,
 // und die Detail-Angaben Verlag, Jahr und ISBN, die laut Plan reine Information sind und
 // keine Filter.
@@ -91,7 +98,7 @@ export default async function BuchSeite({ params }: { params: Promise<{ id: stri
           <Link
             href={`/buch/${buch.id}/bearbeiten`}
             title={t.buch.bearbeitenTitel}
-            className="inline-flex h-11 items-center gap-2 rounded-md px-2 text-sm font-semibold text-tinte"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-md px-2 text-sm font-semibold text-tinte"
           >
             <PencilIcon />
             {t.buch.bearbeiten}

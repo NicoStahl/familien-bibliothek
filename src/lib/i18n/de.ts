@@ -19,7 +19,7 @@ export const de = {
   sprache: "de",
   sprachname: "Deutsch",
   appBeschreibung: "Die Familienbibliothek mit Barcode-Scanner",
-  seitentitel: (seite: string) => `${seite} — Bücherfuchs`,
+  seitentitel: (seite: string) => `${seite} · Bücherfuchs`,
 
   nav: {
     hauptnavigation: "Hauptnavigation",
@@ -108,7 +108,8 @@ export const de = {
     bearbeitenTitel: "Buch bearbeiten",
     loeschen: (titel: string) => `${titel} löschen`,
     abbrechen: "Abbrechen",
-    wirklichLoeschen: "Wirklich löschen",
+    loeschenFrage: (titel: string) => `${titel} löschen? Das Coverbild verschwindet mit.`,
+    jaLoeschen: "Ja, löschen",
     aenderungenSpeichern: "Änderungen speichern",
   },
 
