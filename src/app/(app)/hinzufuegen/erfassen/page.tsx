@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { BuchFormular } from "@/components/BuchFormular";
 import { SeitenKopf } from "@/components/SeitenKopf";
 import { speichereNeuesBuch } from "@/lib/buchActions";
-import { metadatenZuIsbn } from "@/lib/buchapi";
+import { bandAusOpenLibrary, metadatenZuIsbn } from "@/lib/buchapi";
 import { findeNachIsbn } from "@/lib/buecher";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { normalisiereIsbn } from "@/lib/isbn";
@@ -30,9 +30,12 @@ export default async function ErfassenSeite({
   const normalisiert = isbn ? normalisiereIsbn(isbn) : null;
   if (!normalisiert) notFound();
 
-  const [auskunft, duplikate] = await Promise.all([
+  // Die Bandnummer läuft parallel zu den Metadaten: Sie braucht zwei eigene Anfragen bei Open
+  // Library, und hintereinander verlängerten die jeden Scan um eine Sekunde.
+  const [auskunft, duplikate, bandOpenLibrary] = await Promise.all([
     metadatenZuIsbn(normalisiert),
     Promise.resolve(findeNachIsbn(normalisiert)),
+    bandAusOpenLibrary(normalisiert),
   ]);
   const { treffer, stoerungen } = auskunft;
 
@@ -86,6 +89,8 @@ export default async function ErfassenSeite({
           verlag: treffer?.verlag,
           jahr: treffer?.jahr,
           coverUrl: treffer?.coverUrl,
+          // Die Nummer der DNB geht vor: Sie zählt die Bände dieser deutschen Ausgabe.
+          bandVorschlag: treffer?.band ?? bandOpenLibrary,
         }}
       />
     </div>

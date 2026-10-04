@@ -31,6 +31,8 @@ export type BuchTreffer = {
   autor: string | null;
   verlag: string | null;
   jahr: number | null;
+  /** Bandnummer, falls die Quelle sie am Datensatz führt (bisher nur die DNB, Feld 245 $n). */
+  band?: number | null;
   /** Fremde Adresse. Wird von cover.ts heruntergeladen, nicht gespeichert. */
   coverUrl: string | null;
   isbn: string | null;
@@ -264,66 +266,93 @@ function xmlText(roh: string): string {
     .trim();
 }
 
-/** Alle Werte eines Dublin-Core-Felds aus einem DNB-Datensatz, z. B. `creator`. */
-function dcFelder(datensatz: string, feld: string): string[] {
-  const muster = new RegExp(`<dc:${feld}(?:\\s[^>]*)?>([^<]*)</dc:${feld}>`, "g");
-  return [...datensatz.matchAll(muster)].map((m) => xmlText(m[1])).filter(Boolean);
-}
+/** Ein MARC-Datenfeld: Kennzahl, zweiter Indikator, Unterfelder in Reihenfolge. */
+type MarcFeld = { tag: string; ind2: string; unter: { code: string; wert: string }[] };
 
 /**
- * „Unser Schiff : eine Bilderbuch-Reise mit Suchspiel / Antje von Stemm" → „Unser Schiff. Eine
- * Bilderbuch-Reise mit Suchspiel".
+ * Die Datenfelder eines MARC21-XML-Datensatzes.
  *
- * Die DNB liefert den Titel nach Katalogregeln: Hinter „ / " folgt die Verantwortlichkeit
- * (Autor, Übersetzer, Herausgeber — die stehen sauberer in `creator`), hinter „ : " der
- * Untertitel. Daraus wird dieselbe Form, die Google liefert. Das „¬" klammert in Katalogdaten
- * Artikel ein, die beim Sortieren übersprungen werden („¬Der¬ kleine Prinz").
+ * Katalogdaten klammern Artikel, die beim Sortieren übersprungen werden, mit den Steuerzeichen
+ * U+0098/U+009C ein („Die Lügen der Frauen" kommt als `&#152;Die&#156; Lügen der Frauen`) —
+ * unsichtbar, aber sie würden Suche und Serienabgleich zwischen zwei Wörtern zerschneiden.
  */
-function dnbTitel(roh: string): string {
-  const ohneVerantwortung = roh.split(" / ")[0].replace(/¬/g, "");
-  const [haupt, ...unter] = ohneVerantwortung.split(" : ").map((s) => s.trim());
-  const untertitel = unter.join(": ");
-  if (!untertitel) return haupt;
-  return `${haupt}. ${untertitel.charAt(0).toUpperCase()}${untertitel.slice(1)}`;
+function marcFelder(xml: string): MarcFeld[] {
+  return [
+    ...xml.matchAll(/<datafield tag="(\d{3})" ind1="." ind2="(.)">([\s\S]*?)<\/datafield>/g),
+  ].map(([, tag, ind2, inhalt]) => ({
+    tag,
+    ind2,
+    unter: [...inhalt.matchAll(/<subfield code="(\w)">([^<]*)<\/subfield>/g)].map(([, code, wert]) => ({
+      code,
+      wert: xmlText(wert).replace(/[\u0098\u009c¬]/g, "").trim(),
+    })),
+  }));
+}
+
+function unterfeld(feld: MarcFeld | undefined, code: string): string | undefined {
+  return feld?.unter.find((u) => u.code === code)?.wert || undefined;
+}
+
+/** „Rowling, J. K." → „J. K. Rowling". Namen ohne Komma bleiben, wie sie sind. */
+function vornameZuerst(name: string): string {
+  const [nach, vor] = name.split(/,\s*/, 2);
+  return vor ? `${vor} ${nach}` : nach;
 }
 
 /**
- * Die Autoren aus den `creator`-Feldern, als „Vorname Nachname".
+ * Titel und Bandnummer aus Feld 245.
  *
- * Jeder Eintrag trägt seine Rolle in eckigen Klammern: „Rowling, J. K. [Verfasser]",
- * „Fritz, Klaus [Übersetzer]". Genommen werden die Verfasser; fehlen sie (Anthologien), die
- * Herausgeber; erst dann Einträge ohne Rolle. Übersetzer und Illustratoren nie — die gehören
- * nicht in die Autorzeile.
+ * Zwei Formen: ein Einzelwerk mit Untertitel ($a Unser Schiff, $b eine Bilderbuch-Reise …), oder
+ * ein Band eines mehrbändigen Werks ($a Eragon, $n 3, $p Die Weisheit des Feuers). Der zweite
+ * Fall ist für Serien der wichtige: Dort steht der Reihenname als Haupttitel, und nur so wird
+ * aus dem Band „Eragon. Die Weisheit des Feuers" statt nur „Die Weisheit des Feuers" — der
+ * Titelabgleich findet die Serie dann von selbst. $n trägt die Nummer, sofern die DNB sie kennt
+ * („[...]" heißt: unbekannt).
+ */
+function dnbTitel(feld: MarcFeld | undefined): { titel: string; band: number | null } | null {
+  const haupt = unterfeld(feld, "a");
+  if (!haupt) return null;
+
+  const teil = unterfeld(feld, "p");
+  const zusatz = teil ?? unterfeld(feld, "b");
+  const titel = zusatz
+    ? `${haupt}. ${zusatz.charAt(0).toUpperCase()}${zusatz.slice(1)}`
+    : haupt;
+
+  const nummer = /(\d{1,3})(?!\d)/.exec(unterfeld(feld, "n") ?? "")?.[1];
+  return { titel, band: nummer ? Number(nummer) : null };
+}
+
+/**
+ * Die Autoren: Feld 100 und weitere Verfasser aus 700, sonst die Herausgeber (Anthologien).
+ * Übersetzer, Illustratoren und die 700er mit Originaltitel ($t) nicht — die gehören nicht in
+ * die Autorzeile.
  *
  * Die Namen sind die normierte Form der Normdatei. Bei Übersetzungen aus dem Kyrillischen weicht
  * die Umschrift deshalb vom Buchdeckel ab (Ulickaja statt Ulitzkaja) — korrigierbar im Formular.
  */
-function dnbAutoren(creators: string[]): string | null {
-  const zerlegt = creators.map((c) => {
-    const m = /^(.*?)\s*\[([^\]]+)\]\s*$/.exec(c);
-    return m ? { name: m[1], rolle: m[2] } : { name: c, rolle: null };
-  });
-  const auswahl = [
-    zerlegt.filter((c) => c.rolle === "Verfasser"),
-    zerlegt.filter((c) => c.rolle === "Herausgeber"),
-    zerlegt.filter((c) => c.rolle === null),
-  ].find((liste) => liste.length > 0);
-  if (!auswahl) return null;
+function dnbAutoren(felder: MarcFeld[]): string | null {
+  const personen = felder.filter(
+    (f) => (f.tag === "100" || f.tag === "700") && !unterfeld(f, "t") && unterfeld(f, "a")
+  );
+  const mitRolle = (rolle: string) =>
+    personen.filter((f) => f.tag === "100" || f.unter.some((u) => u.code === "4" && u.wert === rolle));
 
-  return auswahl
-    .map(({ name }) => {
-      const [nach, vor] = name.split(/,\s*/, 2);
-      return vor ? `${vor} ${nach}` : nach;
-    })
-    .join(", ");
+  const verfasser = mitRolle("aut");
+  const auswahl = verfasser.length > 0 ? verfasser : mitRolle("edt");
+  if (auswahl.length === 0) return null;
+
+  const namen = auswahl.map((f) => vornameZuerst(unterfeld(f, "a")!));
+  return [...new Set(namen)].join(", ");
 }
 
-/** „Hamburg : Carlsen" → „Carlsen". Bei mehreren Verlagen („A : X ; B : Y") nur der erste. */
-function dnbVerlag(roh: string | undefined): string | null {
-  if (!roh) return null;
-  const erster = roh.split(" ; ")[0];
-  const name = erster.includes(" : ") ? erster.split(" : ").slice(1).join(" : ") : erster;
-  return name.trim() || null;
+/** Verlag und Jahr aus Feld 264 (Veröffentlichung, zweiter Indikator 1), ältere Sätze aus 260. */
+function dnbVeroeffentlichung(felder: MarcFeld[]): { verlag: string | null; jahr: number | null } {
+  const feld =
+    felder.find((f) => f.tag === "264" && f.ind2 === "1") ?? felder.find((f) => f.tag === "260");
+  const verlag = unterfeld(feld, "b")?.replace(/[\s,;:]+$/, "") || null;
+  const jahr = /\d{4}/.exec(unterfeld(feld, "c") ?? "")?.[0];
+  return { verlag, jahr: jahrAus(jahr) };
 }
 
 /**
@@ -369,16 +398,20 @@ export async function ladeMvbCover(isbn13: string): Promise<{ daten: Buffer; typ
 }
 
 /**
- * Fragt die Deutsche Nationalbibliothek nach einer ISBN (SRU-Schnittstelle, Dublin Core).
+ * Fragt die Deutsche Nationalbibliothek nach einer ISBN (SRU-Schnittstelle, MARC21-XML).
  *
- * Kein Schlüssel, kein Kontingent. Die Antwort ist XML; ein XML-Parser als Abhängigkeit lohnt
- * für die vier flachen Felder nicht. Fehlt `numberOfRecords`, ist die Antwort keine SRU-Antwort
- * und wird als Ausfall gemeldet, nicht als „unbekannt".
+ * MARC statt des kürzeren Dublin Core, seit 04.10.2026: Bei Bänden mehrbändiger Werke — und so
+ * katalogisiert die DNB viele Serienbände — liefert Dublin Core nur den Teiltitel, ohne Autor
+ * und ohne Verlag („Die Weisheit des Feuers", sonst nichts). MARC hat alles in eigenen Feldern.
+ *
+ * Kein Schlüssel, kein Kontingent. Ein XML-Parser als Abhängigkeit lohnt für die paar flachen
+ * Felder nicht. Fehlt `numberOfRecords`, ist die Antwort keine SRU-Antwort und wird als Ausfall
+ * gemeldet, nicht als „unbekannt".
  */
 async function dnbNachIsbn(isbn13: string): Promise<Abfrage> {
   const abruf = await hole(
     `https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve` +
-      `&query=num%3D${isbn13}&recordSchema=oai_dc&maximumRecords=1`,
+      `&query=num%3D${isbn13}&recordSchema=MARC21-xml&maximumRecords=1`,
     "xml"
   );
   if (abruf.art === "stoerung") {
@@ -389,18 +422,18 @@ async function dnbNachIsbn(isbn13: string): Promise<Abfrage> {
   if (!anzahl) return { treffer: null, stoerung: formfehler("DNB") };
   if (anzahl[1] === "0") return { treffer: null, stoerung: null };
 
-  const datensatz = /<record>([\s\S]*?)<\/record>/.exec(abruf.daten)?.[1] ?? "";
-  const rohTitel = dcFelder(datensatz, "title")[0];
-  if (!rohTitel) return { treffer: null, stoerung: null };
-
-  const jahr = /\d{4}/.exec(dcFelder(datensatz, "date")[0] ?? "")?.[0];
+  const felder = marcFelder(abruf.daten);
+  const titel = dnbTitel(felder.find((f) => f.tag === "245"));
+  if (!titel) return { treffer: null, stoerung: null };
+  const { verlag, jahr } = dnbVeroeffentlichung(felder);
 
   return {
     treffer: {
-      titel: dnbTitel(rohTitel),
-      autor: dnbAutoren(dcFelder(datensatz, "creator")),
-      verlag: dnbVerlag(dcFelder(datensatz, "publisher")[0]),
-      jahr: jahrAus(jahr),
+      titel: titel.titel,
+      autor: dnbAutoren(felder),
+      verlag,
+      jahr,
+      band: titel.band,
       coverUrl: await mvbCoverUrl(isbn13),
       isbn: isbn13,
       quelle: "dnb",
@@ -469,6 +502,49 @@ export async function coverUrlAusOpenLibrary(eingabe: string): Promise<string | 
 
   const { treffer } = await openLibraryNachIsbn(isbn13);
   return treffer?.coverUrl ?? null;
+}
+
+const OpenLibraryAusgabe = z.object({
+  works: z.array(z.object({ key: z.string() })).optional(),
+});
+const OpenLibraryWerk = z.object({
+  series: z.array(z.object({ position: z.union([z.string(), z.number()]).optional() })).optional(),
+});
+
+/**
+ * Die Bandnummer eines Buchs laut Open Library, oder null.
+ *
+ * Open Library führt Serien am Werk, nicht an der Ausgabe — mit Position, und damit auch für
+ * deutsche Ausgaben übersetzter Reihen (Harry Potter, Gregs Tagebuch, Eragon). Übernommen wird
+ * NUR die Zahl, nicht der Name: Der steht dort englisch („Diary of a Wimpy Kid"), und welcher
+ * Name im eigenen Regal gilt, entscheidet der eigene Katalog.
+ *
+ * Bewusst still: Ein 404 ist hier der Normalfall (Open Library kennt viele deutsche Ausgaben
+ * nicht), und ein fehlender Bandvorschlag ist keine Störung, die jemand erfahren müsste.
+ */
+export async function bandAusOpenLibrary(isbn13: string): Promise<number | null> {
+  const hol = async (url: string) => {
+    const res = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(ZEITGRENZE_MS),
+      headers: { accept: "application/json", "user-agent": KENNUNG },
+    });
+    return res.ok ? ((await res.json()) as unknown) : null;
+  };
+
+  try {
+    const ausgabe = OpenLibraryAusgabe.safeParse(await hol(`https://openlibrary.org/isbn/${isbn13}.json`));
+    const werkSchluessel = ausgabe.success ? ausgabe.data.works?.[0]?.key : undefined;
+    if (!werkSchluessel || !/^\/works\/OL\d+W$/.test(werkSchluessel)) return null;
+
+    const werk = OpenLibraryWerk.safeParse(await hol(`https://openlibrary.org${werkSchluessel}.json`));
+    const position = werk.success ? werk.data.series?.[0]?.position : undefined;
+    const zahl = /^\s*(\d{1,3})(?!\d)/.exec(String(position ?? ""))?.[1];
+    const n = Number(zahl);
+    return zahl && n >= 1 ? n : null;
+  } catch {
+    return null;
+  }
 }
 
 export type SerienVorschlag = {

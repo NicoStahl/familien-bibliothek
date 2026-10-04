@@ -1,6 +1,7 @@
 import "server-only";
 import { getDb } from "./db";
 import type { Buch } from "./buecher";
+import { autorenSchluessel, type AutorenSerien } from "./serienAbgleich";
 
 // Suche und Filter (Abschnitt "Suche & Filter" des Umsetzungsplans).
 //
@@ -139,6 +140,34 @@ export function vergebeneSerien(): string[] {
       )
       .all() as { serie: string }[]
   ).map((z) => z.serie);
+}
+
+/**
+ * Je Autor die Serien, in denen er im Katalog vorkommt — Grundlage des Autor-Abgleichs beim
+ * Erfassen (`erkenneSerieNachAutor`).
+ *
+ * Die Seriennamen kommen in derselben Schreibweise heraus wie aus `vergebeneSerien()`, damit
+ * das Auswahlfeld den Vorschlag als vorhandenen Eintrag findet und keine zweite Schreibweise
+ * entsteht. Bei ein paar hundert Büchern ist die Liste klein genug, um sie ins Formular zu geben.
+ */
+export function serienNachAutor(): AutorenSerien {
+  const kanonisch = new Map(vergebeneSerien().map((s) => [s.toLowerCase(), s]));
+  const zeilen = getDb()
+    .prepare(
+      `SELECT DISTINCT autor, serie FROM buch
+        WHERE serie IS NOT NULL AND TRIM(serie) <> ''
+          AND autor IS NOT NULL AND TRIM(autor) <> ''`
+    )
+    .all() as { autor: string; serie: string }[];
+
+  const sammlung: Record<string, Set<string>> = {};
+  for (const { autor, serie } of zeilen) {
+    const name = kanonisch.get(serie.toLowerCase()) ?? serie;
+    for (const schluessel of autorenSchluessel(autor)) {
+      (sammlung[schluessel] ??= new Set()).add(name);
+    }
+  }
+  return Object.fromEntries(Object.entries(sammlung).map(([k, s]) => [k, [...s]]));
 }
 
 /** Wie viele Bücher stehen insgesamt im Regal. Für die Kopfzeile des Katalogs. */

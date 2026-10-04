@@ -24,7 +24,8 @@ auch am Rechner.
   praktisch jedes in Deutschland erschienene Buch und braucht keinen Schlüssel
 - **Cover-Kette** Google Books → DNB/MVB → Open Library → Amazon, mit Erkennung der
   Platzhalterbilder („Bild nicht verfügbar"); eigene Fotos lassen sich hochladen
-- **Serien** mit Lückenanzeige, Umbenennen und automatischer Erkennung aus dem eigenen Katalog
+- **Serien** mit Lückenanzeige und Umbenennen; beim Erfassen werden Serie (über Titel oder
+  Autor, aus dem eigenen Katalog) und Bandnummer vorgeschlagen
 - **Ausleihe:** an wen, seit wann, und eine Liste aller verliehenen Bücher
 - **CSV-Export**
 - **Anmeldung per OIDC** (erprobt mit dem Synology SSO Server), ohne OIDC ein Dev-Login für die
@@ -158,7 +159,8 @@ computer too. The name is German for "book fox".
   practically every book published in Germany and needs no key
 - **Cover chain** Google Books → DNB/MVB → Open Library → Amazon, detecting "image not
   available" placeholders; you can also upload your own photo
-- **Series** with gap detection, renaming, and automatic matching against your own catalogue
+- **Series** with gap detection and renaming; when adding a book, the series (by title or
+  author, from your own catalogue) and volume number are suggested
 - **Lending:** to whom, since when, and a list of all books currently lent out
 - **CSV export**
 - **Sign-in via OIDC** (tested with Synology SSO Server); without OIDC, a dev login for local

@@ -4,7 +4,13 @@ import { SpeichernKnopf } from "@/components/SpeichernKnopf";
 import { CoverPlatzhalter } from "@/components/CoverPlatzhalter";
 import { AuswahlFeld } from "@/components/AuswahlFeld";
 import { SerieAuswahlFeld } from "@/components/SerieAuswahlFeld";
-import { SerienVorschlagProvider, TitelFeld } from "@/components/SerienVorschlag";
+import {
+  AutorFeld,
+  BandFeld,
+  SerienVorschlagProvider,
+  TitelFeld,
+} from "@/components/SerienVorschlag";
+import { serienNachAutor } from "@/lib/suche";
 import { formatiereIsbn } from "@/lib/isbn";
 import { vorschauAdresse } from "@/lib/coverVorschau";
 import { kategorieName } from "@/lib/i18n";
@@ -16,9 +22,10 @@ import { texte } from "@/lib/i18n/server";
 // getrennte Formulare liefen unweigerlich auseinander.
 //
 // Bewusst KEINE Client-Komponente. Das Formular hat keinen Zustand, den React verwalten müsste
-// — Formularfelder kann der Browser selbst. Ausgelagert sind nur die zwei Stellen, die ohne
-// Zustand nicht gehen: der Absendeknopf (kennt den Verarbeitungsstand) und die Serienauswahl
-// (schaltet zwischen Liste und Neuanlage um).
+// — Formularfelder kann der Browser selbst. Ausgelagert sind nur die Stellen, die ohne Zustand
+// nicht gehen: der Absendeknopf (kennt den Verarbeitungsstand), die Serienauswahl (schaltet
+// zwischen Liste und Neuanlage um) und die Vorschläge für Serie und Band, die Titel und Autor
+// mitlesen (SerienVorschlag.tsx).
 
 export type Vorgabe = {
   titel?: string | null;
@@ -28,6 +35,8 @@ export type Vorgabe = {
   besitzer?: string | null;
   serie?: string | null;
   band?: number | null;
+  /** Bandnummer laut Open Library, nur nach einem Scan gesetzt — ein Vorschlag, kein Wert. */
+  bandVorschlag?: number | null;
   verlag?: string | null;
   jahr?: number | null;
   /** Bereits gespeichertes Cover (Dateiname im cover-Ordner). Nur beim Bearbeiten gesetzt. */
@@ -108,7 +117,7 @@ export async function BuchFormular({
         </div>
       </div>
 
-      <SerienVorschlagProvider>
+      <SerienVorschlagProvider aktiv={id === undefined} autorenSerien={serienNachAutor()}>
         <div className="mt-6">
           <label htmlFor="titel" className={LABEL}>{t.formular.titel}</label>
           <TitelFeld
@@ -123,7 +132,7 @@ export async function BuchFormular({
 
         <div className="mt-4">
           <label htmlFor="autor" className={LABEL}>{t.formular.autor}</label>
-          <input
+          <AutorFeld
             id="autor"
             name="autor"
             type="text"
@@ -177,18 +186,14 @@ export async function BuchFormular({
             labelClass={LABEL}
             eingabeClass={EINGABE}
           />
-          <div>
-            <label htmlFor="band" className={LABEL}>{t.formular.band}</label>
-            <input
-              id="band"
-              name="band"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              defaultValue={vorgabe.band ?? ""}
-              className={EINGABE}
-            />
-          </div>
+          <BandFeld
+            serien={serien}
+            vorgabe={vorgabe.band ?? null}
+            vorschlag={vorgabe.bandVorschlag ?? null}
+            label={t.formular.band}
+            labelClass={LABEL}
+            eingabeClass={EINGABE}
+          />
         </div>
       </SerienVorschlagProvider>
 
