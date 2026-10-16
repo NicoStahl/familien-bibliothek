@@ -20,6 +20,91 @@ const COVER_KANTE = 700;
 /** Mehr als das kann ein Cover nicht sein. Bremst einen fehlgeleiteten Download aus. */
 const MAX_DOWNLOAD_BYTES = 8 * 1024 * 1024;
 
+/** Mehr Weiterleitungen braucht keine der Quellen (Open Library: zwei). */
+const MAX_WEITERLEITUNGEN = 5;
+
+/**
+ * Hosts, von denen der Server Cover laden darf — genau die Quellen aus buchapi.ts und
+ * amazonCoverUrl, plus die Spiegel, auf die sie weiterleiten.
+ *
+ * Die Liste ist eine Sicherheitsgrenze, keine Bequemlichkeit: `cover_url` kommt als
+ * verstecktes Formularfeld vom Browser und lässt sich frei setzen. Ohne Liste holte der
+ * Server jede Adresse, die man ihm hinschreibt — auch die DSM-Oberfläche, den Router oder
+ * andere Geräte im Heimnetz (Security-Audit vom 16.10.2026).
+ *
+ * Gemessen am 16.10.2026: covers.openlibrary.org/b/id/… leitet über archive.org auf einen
+ * Spiegel wie ia902809.us.archive.org weiter, deshalb gilt archive.org samt Unterdomains.
+ */
+const ERLAUBTE_HOSTS = new Set([
+  "books.google.com",
+  "books.googleusercontent.com",
+  "covers.openlibrary.org",
+  "archive.org",
+  "images-na.ssl-images-amazon.com",
+  "m.media-amazon.com",
+  "portal.dnb.de",
+]);
+const ERLAUBTE_HOST_ENDUNGEN = [".archive.org"];
+
+function istErlaubteAdresse(url: URL): boolean {
+  if (url.protocol !== "https:" || url.port !== "" || url.username || url.password) return false;
+  const host = url.hostname.toLowerCase();
+  return ERLAUBTE_HOSTS.has(host) || ERLAUBTE_HOST_ENDUNGEN.some((e) => host.endsWith(e));
+}
+
+/**
+ * Ruft eine Cover-Adresse ab und folgt Weiterleitungen selbst: Jedes Ziel muss wieder auf der
+ * Liste stehen. Mit dem Standard `redirect: "follow"` wäre die Liste über eine Weiterleitung
+ * von einem erlaubten Host aus zu umgehen — und fetch folgt dabei auch von https auf http.
+ */
+async function holeVonErlaubtemHost(start: URL, signal: AbortSignal): Promise<Response | null> {
+  let url = start;
+  for (let i = 0; i <= MAX_WEITERLEITUNGEN; i++) {
+    if (!istErlaubteAdresse(url)) return null;
+    const res = await fetch(url, {
+      cache: "no-store",
+      redirect: "manual",
+      signal,
+      headers: { accept: "image/*" },
+    });
+    if (res.status < 300 || res.status >= 400) return res;
+    await res.body?.cancel();
+    const ziel = res.headers.get("location");
+    if (!ziel) return null;
+    url = new URL(ziel, url);
+  }
+  return null;
+}
+
+/**
+ * Liest den Body mit laufendem Bytezähler und bricht ab, sobald MAX_DOWNLOAD_BYTES
+ * überschritten ist. `arrayBuffer()` mit nachträglicher Prüfung hielte erst die ganze
+ * Antwort im Speicher — bei einer endlosen Antwort so viel, wie in zehn Sekunden ankommt.
+ */
+async function leseBegrenzt(res: Response): Promise<Buffer | null> {
+  const angegeben = Number(res.headers.get("content-length"));
+  if (angegeben > MAX_DOWNLOAD_BYTES) {
+    await res.body?.cancel();
+    return null;
+  }
+  if (!res.body) return null;
+
+  const teile: Uint8Array[] = [];
+  let summe = 0;
+  const leser = res.body.getReader();
+  for (;;) {
+    const { done, value } = await leser.read();
+    if (done) break;
+    summe += value.byteLength;
+    if (summe > MAX_DOWNLOAD_BYTES) {
+      await leser.cancel();
+      return null;
+    }
+    teile.push(value);
+  }
+  return Buffer.concat(teile);
+}
+
 export function coverDir(): string {
   return process.env.COVER_DIR ?? path.join(process.cwd(), "cover");
 }
@@ -111,18 +196,17 @@ async function istPlatzhalter(daten: Buffer): Promise<boolean> {
 export async function ladeCoverHerunter(quelle: string): Promise<string | null> {
   try {
     const url = new URL(quelle.replace(/^http:\/\//i, "https://"));
-    if (url.protocol !== "https:") return null;
 
-    const res = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-      headers: { accept: "image/*" },
-    });
-    if (!res.ok) return null;
-    if (!(res.headers.get("content-type") ?? "").startsWith("image/")) return null;
+    // Die zehn Sekunden gelten für den ganzen Abruf, Weiterleitungen und Body eingeschlossen.
+    const res = await holeVonErlaubtemHost(url, AbortSignal.timeout(10_000));
+    if (!res) return null;
+    if (!res.ok || !(res.headers.get("content-type") ?? "").startsWith("image/")) {
+      await res.body?.cancel();
+      return null;
+    }
 
-    const roh = Buffer.from(await res.arrayBuffer());
-    if (roh.byteLength > MAX_DOWNLOAD_BYTES) return null;
+    const roh = await leseBegrenzt(res);
+    if (!roh) return null;
 
     // Ein echtes Cover ist nie unter 100 px breit. Das schließt die Platzhalter-Pixel beider
     // APIs aus, ohne eine Prüfung auf konkrete Byte-Muster zu brauchen.
