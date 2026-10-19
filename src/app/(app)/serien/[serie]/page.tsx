@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SeitenKopf } from "@/components/SeitenKopf";
 import { SerieUmbenennen } from "@/components/SerieUmbenennen";
 import { BuchKachel } from "@/components/BuchKachel";
+import { requireUser } from "@/lib/auth";
 import { buecherDerSerie } from "@/lib/buecher";
 import { serienVorschlaege } from "@/lib/buchapi";
 import { DIENSTE_BEI_SERIEN, stoerungsText } from "@/lib/stoerung";
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ serie: st
 export const dynamic = "force-dynamic";
 
 export default async function SerienDetailSeite({ params }: { params: Promise<{ serie: string }> }) {
+  await requireUser();
   const { serie } = await params;
   const name = decodeURIComponent(serie);
   const buecher = buecherDerSerie(name);

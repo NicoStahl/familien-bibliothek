@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BuchKachel } from "@/components/BuchKachel";
 import { KatalogFilter } from "@/components/KatalogFilter";
 import { Fuchs } from "@/components/Fuchs";
+import { requireUser } from "@/lib/auth";
 import { anzahlBuecher, filterAusParams, istLeer, sucheBuecher, vergebeneSerien } from "@/lib/suche";
 import { besitzerNamen } from "@/lib/besitzer";
 import { texte } from "@/lib/i18n/server";
@@ -25,6 +26,7 @@ type Params = Promise<{
 }>;
 
 export default async function KatalogSeite({ searchParams }: { searchParams: Params }) {
+  await requireUser();
   const params = await searchParams;
   const filter = filterAusParams(params);
 

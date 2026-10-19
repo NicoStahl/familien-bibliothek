@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { Fuchs } from "@/components/Fuchs";
 import { anzahlBuecher } from "@/lib/suche";
 import { SPRACHEN, woerterbuch } from "@/lib/i18n";
@@ -16,7 +16,7 @@ export async function generateMetadata() {
 }
 
 export default async function MehrSeite() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const gesamt = anzahlBuecher();
   const t = await texte();
 
@@ -77,7 +77,7 @@ export default async function MehrSeite() {
         <h2 className="utility text-[10px] text-stein">{t.mehr.anmeldung}</h2>
         <div className="mt-2 rounded-xl border border-linie-zart bg-karte p-4">
           <p className="text-sm text-tinte">
-            {t.mehr.angemeldetAls} <strong className="font-semibold">{user?.display_name ?? user?.username}</strong>
+            {t.mehr.angemeldetAls} <strong className="font-semibold">{user.display_name ?? user.username}</strong>
           </p>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-stein">
             {t.mehr.anmeldungText}

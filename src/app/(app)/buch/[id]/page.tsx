@@ -5,6 +5,7 @@ import { CoverPlatzhalter } from "@/components/CoverPlatzhalter";
 import { AusleihFormular } from "@/components/AusleihFormular";
 import { BuchLoeschen } from "@/components/BuchLoeschen";
 import { PencilIcon } from "@/components/IconButton";
+import { requireUser } from "@/lib/auth";
 import { holeBuch } from "@/lib/buecher";
 import { besitzerBadge } from "@/lib/besitzer";
 import { formatiereIsbn } from "@/lib/isbn";
@@ -12,6 +13,7 @@ import { kategorieName } from "@/lib/i18n";
 import { texte } from "@/lib/i18n/server";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const { id } = await params;
   const t = await texte();
   const buch = holeBuch(Number(id));
@@ -25,6 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export const dynamic = "force-dynamic";
 
 export default async function BuchSeite({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const { id } = await params;
   const buch = holeBuch(Number(id));
   if (!buch) notFound();

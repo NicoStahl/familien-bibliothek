@@ -4,6 +4,12 @@ import { TabBar } from "@/components/TabBar";
 // Alles unterhalb dieser Route-Gruppe setzt eine Anmeldung voraus. requireUser leitet
 // andernfalls auf /api/auth/login um, das je nach Konfiguration zu DSM-SSO oder (nur
 // außerhalb von Produktion) zum Dev-Login-Formular führt.
+//
+// Die Prüfung hier allein reicht NICHT: Bei einer RSC-Navigation rendert Next.js nur die
+// Segmente, die der Client laut Next-Router-State-Tree noch nicht hat — und dieser Header ist
+// frei wählbar. Wer behauptet, das (app)-Layout schon zu haben, überspringt es samt diesem
+// Aufruf. Deshalb ruft jede Seite (und jedes generateMetadata, das die Datenbank liest)
+// requireUser() noch einmal selbst auf. Neue Seiten unter (app) müssen das ebenfalls tun.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   await requireUser();
 

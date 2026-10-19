@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BuchFormular } from "@/components/BuchFormular";
 import { SeitenKopf } from "@/components/SeitenKopf";
+import { requireUser } from "@/lib/auth";
 import { speichereNeuesBuch } from "@/lib/buchActions";
 import { bandAusOpenLibrary, metadatenZuIsbn } from "@/lib/buchapi";
 import { findeNachIsbn } from "@/lib/buecher";
@@ -31,6 +32,7 @@ export default async function ErfassenSeite({
 }: {
   searchParams: Promise<{ isbn?: string }>;
 }) {
+  await requireUser();
   const { isbn } = await searchParams;
   const normalisiert = isbn ? normalisiereIsbn(isbn) : null;
   if (!normalisiert) notFound();

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireUser } from "@/lib/auth";
 import { listeSerien } from "@/lib/buecher";
 import { texte } from "@/lib/i18n/server";
 
@@ -34,6 +35,7 @@ function luecken(baende: string | null): number[] {
 }
 
 export default async function SerienSeite() {
+  await requireUser();
   const t = await texte();
   const serien = listeSerien();
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Scanner } from "@/components/Scanner";
 import { IsbnEingabe } from "@/components/IsbnEingabe";
+import { requireUser } from "@/lib/auth";
 import { texte } from "@/lib/i18n/server";
 
 // Der primäre Weg ins Regal: Barcode scannen. So steht es im Plan, und so ist die App
@@ -22,6 +23,7 @@ export async function generateMetadata() {
 }
 
 export default async function HinzufuegenSeite() {
+  await requireUser();
   const t = await texte();
   return (
     <div className="px-5 pt-6">

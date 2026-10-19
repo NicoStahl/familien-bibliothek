@@ -1,5 +1,6 @@
 import { BuchFormular } from "@/components/BuchFormular";
 import { SeitenKopf } from "@/components/SeitenKopf";
+import { requireUser } from "@/lib/auth";
 import { speichereNeuesBuch } from "@/lib/buchActions";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { texte } from "@/lib/i18n/server";
@@ -16,6 +17,7 @@ export async function generateMetadata() {
 export const dynamic = "force-dynamic";
 
 export default async function ManuellSeite() {
+  await requireUser();
   const t = await texte();
   const serien = vergebeneSerien();
   const verlage = vergebeneVerlage();

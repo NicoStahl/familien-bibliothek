@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CoverPlatzhalter } from "@/components/CoverPlatzhalter";
+import { requireUser } from "@/lib/auth";
 import { listeAusgeliehen } from "@/lib/buecher";
 import { langesDatum, seitWann } from "@/lib/datum";
 import { texte } from "@/lib/i18n/server";
@@ -18,6 +19,7 @@ export async function generateMetadata() {
 }
 
 export default async function AusgeliehenSeite() {
+  await requireUser();
   const t = await texte();
   const buecher = listeAusgeliehen();
 
