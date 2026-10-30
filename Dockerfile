@@ -4,8 +4,12 @@ WORKDIR /app
 RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
 # Bootstrap: ca-certificates fehlt im schlanken Basis-Image, daher HTTPS-Zertifikatspruefung
 # nur fuer diesen einen Schritt deaktivieren; danach laeuft apt normal verifiziert weiter.
+# Die GPG-Signaturpruefung der Pakete bleibt dabei bewusst an (kein --allow-unauthenticated):
+# Die Debian-Schluessel liegen schon im Basis-Image, und ohne sie waere dieser Schritt
+# voellig ungeschuetzt -- ein untergeschobenes Zertifikatspaket machte danach auch npm ci
+# und jeden HTTPS-Abruf der App angreifbar.
 RUN apt-get update -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false \
-  && apt-get install -y --no-install-recommends --allow-unauthenticated ca-certificates \
+  && apt-get install -y --no-install-recommends ca-certificates \
   -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false \
   && apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
@@ -28,7 +32,7 @@ ENV NODE_ENV=production
 # HTTPS-fetch mit "unable to get local issuer certificate", und zwar erst beim ersten Scan.
 RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
 RUN apt-get update -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false \
-  && apt-get install -y --no-install-recommends --allow-unauthenticated ca-certificates \
+  && apt-get install -y --no-install-recommends ca-certificates \
   -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false \
   && rm -rf /var/lib/apt/lists/*
 
