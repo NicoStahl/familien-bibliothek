@@ -76,13 +76,21 @@ export function kategorieAusSignale({ sachgruppen, merkmale, zielgruppen }: Kate
   if (hat(merkmale, /kochbuch|backbuch|kochen|backen|essen (und|&) trinken/)) return "Kochbuch";
   if (hat(alles, /leseanfänger|erstles/)) return "Erstleser";
 
-  if (
-    hat(merkmale, /kindersachbuch|jugendsachbuch|sachbilderb|sachbücher.*(kinder|jugend)/) ||
-    (sachgebiete.length > 0 && !belletristik && hat(zielgruppen, /^(kind|kleinkind|vorschulkind|schulkind|jugend)/))
-  ) {
+  // Ausdrückliche Angaben vor bloßen Kombinationen: Eine Inhaltsart oder Warengruppe hat jemand
+  // bei der DNB oder im Verlag bewusst vergeben, „Sachgebiet + Zielgruppe Kind" ist nur ein Indiz.
+  // Bis v0.12 standen beide Wege in einer Regel, und ein religiöses Bilderbuch (Sachgruppe 230,
+  // Inhaltsart „Bilderbuch") wurde zum Kindersachbuch.
+  //
+  // „Lernen im Vorschulalter" (die Lern-tiptois) zählt zum Sachbuch Kinder, obwohl die DNB
+  // dieselben Bände auch als „Bilderbuch" führt — so ordnet sie die Familie ein.
+  if (hat(merkmale, /kindersachbuch|jugendsachbuch|sachbilderb|sachbücher.*(kinder|jugend)|lernen im vorschulalter/)) {
     return "Sachbuch Kinder";
   }
-  if (hat(merkmale, /(?<!sach)bilderb/) || hat(zielgruppen, /^(kleinkind|vorschulkind)$/)) return "Bilderbuch";
+  if (hat(merkmale, /(?<!sach)bilderb/)) return "Bilderbuch";
+  if (sachgebiete.length > 0 && !belletristik && hat(zielgruppen, /^(kind|kleinkind|vorschulkind|schulkind|jugend)/)) {
+    return "Sachbuch Kinder";
+  }
+  if (hat(zielgruppen, /^(kleinkind|vorschulkind)$/)) return "Bilderbuch";
   if (hat(merkmale, /jugendb|junge erwachsene|young adult/) || (kinder && hat(zielgruppen, /^jugend/))) {
     return "Jugendbuch";
   }

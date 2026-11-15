@@ -26,6 +26,11 @@ const ERWARTET = {
   "9783570555392": ["Sachbuch", "Harari, Nexus: nur Sachgruppe 300"],
   "9783407792303": ["Bilderbuch", "Der Grüffelo von 1999: alte Sachgruppe in 084"],
   "9789524140607": [null, "Finnische Ausgabe ohne jede Klassifikation"],
+  // Seit v0.12.1, aus dem Abgleich mit den von Hand eingeordneten Scans vom 15.11.2026:
+  "9783868274219": ["Bilderbuch", "Du bist ein Geschenk des Himmels: Bilderbuch trotz Sachgruppe 230"],
+  "9783473418015": ["Sachbuch Kinder", "tiptoi Erste Zahlen: Lernen im Vorschulalter"],
+  "9783473418008": ["Sachbuch Kinder", "tiptoi Erste Buchstaben: Lernen im Vorschulalter"],
+  "9783473492749": ["Sachbuch Kinder", "tiptoi Lern-Spiel-Welt Buchstaben: Lernen im Vorschulalter"],
 };
 
 for (const [isbn, [kategorie, wer]] of Object.entries(ERWARTET)) {

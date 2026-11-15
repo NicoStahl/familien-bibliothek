@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><version>1.1</version><numberOfRecords>1</numberOfRecords><records><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <leader>00000pam a2200000 c 4500</leader>
+    <controlfield tag="001">103415429X</controlfield>
+    <controlfield tag="003">DE-101</controlfield>
+    <controlfield tag="005">20171203095834.0</controlfield>
+    <controlfield tag="007">tu</controlfield>
+    <controlfield tag="008">130502s2013    gw ||||| |||| 00||||ger  </controlfield>
+    <datafield tag="015" ind1=" " ind2=" ">
+      <subfield code="a">13,A48</subfield>
+      <subfield code="z">13,N19</subfield>
+      <subfield code="2">dnb</subfield>
+    </datafield>
+    <datafield tag="016" ind1="7" ind2=" ">
+      <subfield code="2">DE-101</subfield>
+      <subfield code="a">103415429X</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9783868274219</subfield>
+      <subfield code="c">Pp. : EUR 12.95 (DE), EUR 13.40 (AT), sfr 18.90 (freier Pr.)</subfield>
+      <subfield code="9">978-3-86827-421-9</subfield>
+    </datafield>
+    <datafield tag="024" ind1="3" ind2=" ">
+      <subfield code="a">9783868274219</subfield>
+    </datafield>
+    <datafield tag="028" ind1="5" ind2="2">
+      <subfield code="a">Best.-Nr.: 331421</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(DE-599)DNB103415429X</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(OCoLC)864717676</subfield>
+    </datafield>
+    <datafield tag="040" ind1=" " ind2=" ">
+      <subfield code="a">1245</subfield>
+      <subfield code="b">ger</subfield>
+      <subfield code="c">DE-101</subfield>
+      <subfield code="d">9999</subfield>
+    </datafield>
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="a">ger</subfield>
+      <subfield code="h">eng</subfield>
+    </datafield>
+    <datafield tag="044" ind1=" " ind2=" ">
+      <subfield code="c">XA-DE-HE</subfield>
+    </datafield>
+    <datafield tag="082" ind1="7" ind2="4">
+      <subfield code="8">1\p</subfield>
+      <subfield code="a">K</subfield>
+      <subfield code="a">230</subfield>
+      <subfield code="q">DE-101</subfield>
+      <subfield code="2">23sdnb</subfield>
+    </datafield>
+    <datafield tag="090" ind1=" " ind2=" ">
+      <subfield code="a">b</subfield>
+    </datafield>
+    <datafield tag="245" ind1="0" ind2="0">
+      <subfield code="a">Du bist ein Geschenk des Himmels</subfield>
+      <subfield code="c">Lisa T. Bergren. Ill. von Laura J. Bryant. [Dt. von Anne-Ruth Meiß]</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Marburg an der Lahn</subfield>
+      <subfield code="b">Francke</subfield>
+      <subfield code="c">2013</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">[32] S.</subfield>
+      <subfield code="b">überw. Ill.</subfield>
+      <subfield code="c">22 x 23 cm</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">unbewegtes Bild</subfield>
+      <subfield code="b">sti</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="337" ind1=" " ind2=" ">
+      <subfield code="a">ohne Hilfsmittel zu benutzen</subfield>
+      <subfield code="b">n</subfield>
+      <subfield code="2">rdamedia</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Band</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="385" ind1=" " ind2=" ">
+      <subfield code="0">(DE-588)4064017-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4064017-6</subfield>
+      <subfield code="0">(DE-101)040640175</subfield>
+      <subfield code="a">Vorschulkind</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4151473-7</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4151473-7</subfield>
+      <subfield code="0">(DE-101)041514734</subfield>
+      <subfield code="a">Eisbär</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4030550-8</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4030550-8</subfield>
+      <subfield code="0">(DE-101)040305503</subfield>
+      <subfield code="a">Kind</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4014516-5</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4014516-5</subfield>
+      <subfield code="0">(DE-101)040145166</subfield>
+      <subfield code="a">Eltern</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4069996-1</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4069996-1</subfield>
+      <subfield code="0">(DE-101)04069996X</subfield>
+      <subfield code="a">Christliche Existenz</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4120562-5</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4120562-5</subfield>
+      <subfield code="0">(DE-101)041205626</subfield>
+      <subfield code="a">Kinderfrage</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(Produktform)Hardback</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(Buchreligion.de)CC077.1</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(VLB-WN)1210: Hardcover, Softcover / Kinder- und Jugendbücher/Bilderbücher</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4006604-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4006604-6</subfield>
+      <subfield code="0">(DE-101)040066045</subfield>
+      <subfield code="a">Bilderbuch</subfield>
+      <subfield code="2">gnd-content</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">Bilderbuch</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">Bilderbuch</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="0">(DE-101)1010673742</subfield>
+      <subfield code="a">Bilderbücher</subfield>
+      <subfield code="2">gatbeg</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="0">
+      <subfield code="0">(DE-588)4151473-7</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4151473-7</subfield>
+      <subfield code="0">(DE-101)041514734</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Eisbär</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="1">
+      <subfield code="0">(DE-588)4030550-8</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4030550-8</subfield>
+      <subfield code="0">(DE-101)040305503</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Kind</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="2">
+      <subfield code="0">(DE-588)4014516-5</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4014516-5</subfield>
+      <subfield code="0">(DE-101)040145166</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Eltern</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="3">
+      <subfield code="A">f</subfield>
+      <subfield code="a">Bilderbuch</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2=" ">
+      <subfield code="5">DE-101</subfield>
+      <subfield code="5">DE-101</subfield>
+    </datafield>
+    <datafield tag="689" ind1="1" ind2="0">
+      <subfield code="0">(DE-588)4069996-1</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4069996-1</subfield>
+      <subfield code="0">(DE-101)04069996X</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Christliche Existenz</subfield>
+    </datafield>
+    <datafield tag="689" ind1="1" ind2="1">
+      <subfield code="0">(DE-588)4120562-5</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4120562-5</subfield>
+      <subfield code="0">(DE-101)041205626</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Kinderfrage</subfield>
+    </datafield>
+    <datafield tag="689" ind1="1" ind2="2">
+      <subfield code="A">f</subfield>
+      <subfield code="a">Bilderbuch</subfield>
+    </datafield>
+    <datafield tag="689" ind1="1" ind2=" ">
+      <subfield code="5">DE-101</subfield>
+      <subfield code="5">DE-101</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)120184397</subfield>
+      <subfield code="0">https://d-nb.info/gnd/120184397</subfield>
+      <subfield code="0">(DE-101)120184397</subfield>
+      <subfield code="a">Bergren, Lisa Tawn</subfield>
+      <subfield code="e">Mitwirkender</subfield>
+      <subfield code="4">ctb</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)1043633944</subfield>
+      <subfield code="0">https://d-nb.info/gnd/1043633944</subfield>
+      <subfield code="0">(DE-101)1043633944</subfield>
+      <subfield code="a">Bryant, Laura J.</subfield>
+      <subfield code="d">1961-</subfield>
+      <subfield code="e">Mitwirkender</subfield>
+      <subfield code="4">ctb</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="730" ind1="0" ind2="2">
+      <subfield code="a">God gave us you</subfield>
+      <subfield code="g">engl.</subfield>
+    </datafield>
+    <datafield tag="850" ind1=" " ind2=" ">
+      <subfield code="a">DE-101a</subfield>
+      <subfield code="a">DE-101b</subfield>
+    </datafield>
+    <datafield tag="856" ind1="4" ind2="2">
+      <subfield code="m">X:MVB</subfield>
+      <subfield code="q">text/html</subfield>
+      <subfield code="u">https://services.dnb.de/plus/idn/103415429X/blurb/</subfield>
+      <subfield code="3">Inhaltstext</subfield>
+    </datafield>
+    <datafield tag="883" ind1="2" ind2=" ">
+      <subfield code="8">1\p</subfield>
+      <subfield code="a">dnb</subfield>
+      <subfield code="d">20160229</subfield>
+      <subfield code="q">DE-101</subfield>
+      <subfield code="u">https://d-nb.info/provenance/plan#dnb</subfield>
+    </datafield>
+    <datafield tag="925" ind1="r" ind2=" ">
+      <subfield code="a">ra</subfield>
+    </datafield>
+  </record></recordData><recordPosition>1</recordPosition></record></records><echoedSearchRetrieveRequest><version>1.1</version><query>num=9783868274219</query><xQuery xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/><maximumRecords>1</maximumRecords><recordSchema>MARC21-xml</recordSchema></echoedSearchRetrieveRequest></searchRetrieveResponse>
