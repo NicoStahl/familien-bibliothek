@@ -1,12 +1,14 @@
 import { requireUser } from "@/lib/auth";
 import { Fuchs } from "@/components/Fuchs";
+import { KategorienNachtragen } from "@/components/KategorienNachtragen";
 import { anzahlBuecher } from "@/lib/suche";
+import { anzahlOhneKategorie } from "@/lib/buecher";
 import { SPRACHEN, woerterbuch } from "@/lib/i18n";
 import { texte } from "@/lib/i18n/server";
 import { setzeSprache } from "@/lib/spracheActions";
 import packageJson from "../../../../package.json";
 
-// Alles, was selten gebraucht wird: Export, Abmelden, Auskunft über die App.
+// Alles, was selten gebraucht wird: Export, Kategorien nachtragen, Abmelden, Auskunft über die App.
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,14 @@ export default async function MehrSeite() {
           >
             {t.mehr.exportieren}
           </a>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="utility text-[10px] text-stein">{t.mehr.kategorien}</h2>
+        <div className="mt-2 rounded-xl border border-linie-zart bg-karte p-4">
+          <p className="text-sm leading-relaxed text-tinte">{t.mehr.kategorienText}</p>
+          <KategorienNachtragen offen={anzahlOhneKategorie()} />
         </div>
       </section>
 

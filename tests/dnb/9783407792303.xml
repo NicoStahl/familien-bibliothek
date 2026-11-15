@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><version>1.1</version><numberOfRecords>1</numberOfRecords><records><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <leader>00000nam a2200000 c 4500</leader>
+    <controlfield tag="001">955876818</controlfield>
+    <controlfield tag="003">DE-101</controlfield>
+    <controlfield tag="005">20171203062349.0</controlfield>
+    <controlfield tag="007">tu</controlfield>
+    <controlfield tag="008">990223s1999    gw ||||| |||| 00||||ger  </controlfield>
+    <datafield tag="015" ind1=" " ind2=" ">
+      <subfield code="a">99,A23,0074</subfield>
+      <subfield code="2">dnb</subfield>
+    </datafield>
+    <datafield tag="016" ind1="7" ind2=" ">
+      <subfield code="2">DE-101</subfield>
+      <subfield code="a">955876818</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9783407792303</subfield>
+      <subfield code="c">Pp. : DM 22.00</subfield>
+      <subfield code="9">978-3-407-79230-3</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">3407792301</subfield>
+      <subfield code="c">Pp. : DM 22.00</subfield>
+      <subfield code="9">3-407-79230-1</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(DE-599)DNB955876818</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(OCoLC)76014138</subfield>
+    </datafield>
+    <datafield tag="040" ind1=" " ind2=" ">
+      <subfield code="a">1240</subfield>
+      <subfield code="b">ger</subfield>
+      <subfield code="c">DE-101</subfield>
+      <subfield code="d">9999</subfield>
+    </datafield>
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="a">ger</subfield>
+      <subfield code="h">eng</subfield>
+    </datafield>
+    <datafield tag="044" ind1=" " ind2=" ">
+      <subfield code="c">XA-DE</subfield>
+    </datafield>
+    <datafield tag="084" ind1=" " ind2=" ">
+      <subfield code="a">07</subfield>
+      <subfield code="a">K</subfield>
+      <subfield code="q">DE-101</subfield>
+      <subfield code="2">sdnb</subfield>
+    </datafield>
+    <datafield tag="084" ind1=" " ind2=" ">
+      <subfield code="a">25.2b</subfield>
+      <subfield code="a">25.3</subfield>
+      <subfield code="a">5.2</subfield>
+      <subfield code="q">DE-101</subfield>
+      <subfield code="2">sswd</subfield>
+    </datafield>
+    <datafield tag="245" ind1="0" ind2="0">
+      <subfield code="a">&#152;Der&#156; Grüffelo</subfield>
+      <subfield code="c">Axel Scheffler ; Julia Donaldson. Aus dem Engl. von Monika Osberghaus</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Weinheim</subfield>
+      <subfield code="b">Beltz und Gelberg</subfield>
+      <subfield code="c">1999</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">[28] S.</subfield>
+      <subfield code="b">überw. Ill.</subfield>
+      <subfield code="c">28 cm</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">unbewegtes Bild</subfield>
+      <subfield code="b">sti</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="337" ind1=" " ind2=" ">
+      <subfield code="a">ohne Hilfsmittel zu benutzen</subfield>
+      <subfield code="b">n</subfield>
+      <subfield code="2">rdamedia</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Band</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="385" ind1=" " ind2=" ">
+      <subfield code="0">(DE-588)4064017-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4064017-6</subfield>
+      <subfield code="0">(DE-101)040640175</subfield>
+      <subfield code="a">Vorschulkind</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4064423-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4064423-6</subfield>
+      <subfield code="0">(DE-101)040644235</subfield>
+      <subfield code="a">Waldtiere</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4002053-8</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4002053-8</subfield>
+      <subfield code="0">(DE-101)040020533</subfield>
+      <subfield code="a">Angst</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4153957-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4153957-6</subfield>
+      <subfield code="0">(DE-101)041539575</subfield>
+      <subfield code="a">Feldwaldmaus</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4078547-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4078547-6</subfield>
+      <subfield code="0">(DE-101)040785475</subfield>
+      <subfield code="a">Ungeheuer</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="0">(DE-588)4006604-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4006604-6</subfield>
+      <subfield code="0">(DE-101)040066045</subfield>
+      <subfield code="a">Bilderbuch</subfield>
+      <subfield code="2">gnd-content</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">Bilderbuch</subfield>
+      <subfield code="9">rswk-swf</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="0">
+      <subfield code="0">(DE-588)4064423-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4064423-6</subfield>
+      <subfield code="0">(DE-101)040644235</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Waldtiere</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="1">
+      <subfield code="0">(DE-588)4002053-8</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4002053-8</subfield>
+      <subfield code="0">(DE-101)040020533</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Angst</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="2">
+      <subfield code="0">(DE-588)4153957-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4153957-6</subfield>
+      <subfield code="0">(DE-101)041539575</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Feldwaldmaus</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="3">
+      <subfield code="0">(DE-588)4078547-6</subfield>
+      <subfield code="0">https://d-nb.info/gnd/4078547-6</subfield>
+      <subfield code="0">(DE-101)040785475</subfield>
+      <subfield code="D">s</subfield>
+      <subfield code="a">Ungeheuer</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2="4">
+      <subfield code="A">f</subfield>
+      <subfield code="a">Bilderbuch</subfield>
+    </datafield>
+    <datafield tag="689" ind1="0" ind2=" ">
+      <subfield code="5">DE-101</subfield>
+      <subfield code="5">DE-101</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)119113678</subfield>
+      <subfield code="0">https://d-nb.info/gnd/119113678</subfield>
+      <subfield code="0">(DE-101)119113678</subfield>
+      <subfield code="a">Scheffler, Axel</subfield>
+      <subfield code="d">1957-</subfield>
+      <subfield code="e">Mitwirkender</subfield>
+      <subfield code="4">ctb</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)124452744</subfield>
+      <subfield code="0">https://d-nb.info/gnd/124452744</subfield>
+      <subfield code="0">(DE-101)124452744</subfield>
+      <subfield code="a">Donaldson, Julia</subfield>
+      <subfield code="d">1948-</subfield>
+      <subfield code="e">Mitwirkender</subfield>
+      <subfield code="4">ctb</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)128366869</subfield>
+      <subfield code="0">https://d-nb.info/gnd/128366869</subfield>
+      <subfield code="0">(DE-101)128366869</subfield>
+      <subfield code="a">Osberghaus, Monika</subfield>
+      <subfield code="d">1962-</subfield>
+      <subfield code="e">Übersetzer</subfield>
+      <subfield code="4">trl</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="730" ind1="0" ind2="2">
+      <subfield code="a">&#152;The&#156; Gruffalo</subfield>
+      <subfield code="g">dt.</subfield>
+    </datafield>
+    <datafield tag="850" ind1=" " ind2=" ">
+      <subfield code="a">DE-101a</subfield>
+      <subfield code="a">DE-101b</subfield>
+    </datafield>
+    <datafield tag="856" ind1="4" ind2="2">
+      <subfield code="m">X:MVB</subfield>
+      <subfield code="q">text/html</subfield>
+      <subfield code="u">https://services.dnb.de/plus/idn/955876818/blurb/</subfield>
+      <subfield code="3">Inhaltstext</subfield>
+    </datafield>
+    <datafield tag="925" ind1="r" ind2=" ">
+      <subfield code="a">ra</subfield>
+    </datafield>
+  </record></recordData><recordPosition>1</recordPosition></record></records><echoedSearchRetrieveRequest><version>1.1</version><query>num=9783407792303</query><xQuery xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/><maximumRecords>1</maximumRecords><recordSchema>MARC21-xml</recordSchema></echoedSearchRetrieveRequest></searchRetrieveResponse>

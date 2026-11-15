@@ -15,3 +15,6 @@ cover*
 # Entwurfsmaterial: die Schriften liegen für den Build unter src/fonts/, das Mockup wird im
 # Container nicht gebraucht.
 design
+
+# Testdaten (echte DNB-Antworten) und Tests laufen nur in der Entwicklung.
+tests

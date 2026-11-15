@@ -132,6 +132,7 @@ export const en: Woerterbuch = {
     titel: "Title",
     autor: "Author",
     kategorie: "Category",
+    kategorieVorschlag: "Suggested from the German National Library's catalogue.",
     besitzer: "Owner",
     bitteWaehlen: "Please choose",
     serie: "Series",
@@ -243,6 +244,18 @@ export const en: Woerterbuch = {
     zeilen: (n) => (n === 1 ? "1 row" : `${n} rows`),
     exportFormat: "semicolon-separated, for Excel",
     exportieren: "Export catalogue",
+    kategorien: "Categories",
+    kategorienText:
+      "Books filed under “Other” can be sorted afterwards — using the same suggestion from the German National Library's catalogue as when scanning. Books without an ISBN or without a suggestion stay where they are.",
+    kategorienOffen: (n) => (n === 1 ? "1 book under “Other” with an ISBN" : `${n} books under “Other” with an ISBN`),
+    kategorienKeine: "No book with an ISBN is filed under “Other”.",
+    kategorienStarten: "Fill in categories",
+    kategorienLaeuft: (geprueft, gesamt) => `Checking ${geprueft} of ${gesamt} …`,
+    kategorienFertig: (eingeordnet, ohne) =>
+      `${eingeordnet === 1 ? "1 book" : `${eingeordnet} books`} sorted, ${ohne} without a suggestion.`,
+    kategorienStoerung:
+      "The National Library isn't answering right now. Everything sorted so far is saved — just start again later.",
+    kategorienListe: "Sorted wrongly? Tap the book and change it there.",
     sprache: "Language",
     spracheText: "Applies to this device and this browser.",
     anmeldung: "Sign-in",

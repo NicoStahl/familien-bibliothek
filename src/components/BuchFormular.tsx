@@ -32,6 +32,8 @@ export type Vorgabe = {
   autor?: string | null;
   isbn?: string | null;
   kategorie?: string | null;
+  /** Die Kategorie stammt aus dem DNB-Datensatz, nicht von einem Menschen. Nur nach einem Scan. */
+  kategorieVorgeschlagen?: boolean;
   besitzer?: string | null;
   serie?: string | null;
   band?: number | null;
@@ -161,6 +163,11 @@ export async function BuchFormular({
                 <option key={k} value={k}>{kategorieName(t, k)}</option>
               ))}
             </select>
+            {/* Der Vorschlag sagt, woher er kommt: Eine vorausgewählte Kategorie sieht sonst
+                aus wie eine, die schon jemand geprüft hat. */}
+            {vorgabe.kategorieVorgeschlagen && (
+              <p className="mt-1.5 text-[12px] leading-relaxed text-stein">{t.formular.kategorieVorschlag}</p>
+            )}
           </div>
           <div>
             <label htmlFor="besitzer" className={LABEL}>{t.formular.besitzer}</label>

@@ -228,6 +228,46 @@ export function alleBuecher(): Buch[] {
     .all() as Buch[];
 }
 
+/** Bücher, die die Nachkategorisierung angehen kann: unter „Sonstiges" und mit ISBN. */
+const OHNE_KATEGORIE = `kategorie = @fallback AND isbn IS NOT NULL AND TRIM(isbn) <> ''`;
+
+export function anzahlOhneKategorie(): number {
+  const zeile = getDb()
+    .prepare(`SELECT COUNT(*) AS n FROM buch WHERE ${OHNE_KATEGORIE}`)
+    .get({ fallback: KATEGORIE_FALLBACK }) as { n: number };
+  return zeile.n;
+}
+
+/**
+ * Der nächste Schwung für die Nachkategorisierung, nach `id` geordnet ab `abId` (exklusiv).
+ *
+ * Über die Kennung weiterzählen statt über einen Versatz: Eingeordnete Bücher fallen aus der
+ * Menge heraus, und mit OFFSET übersprünge der nächste Schwung genau so viele, wie gerade
+ * eingeordnet wurden.
+ */
+export function buecherOhneKategorie(abId: number, anzahl: number): Pick<Buch, "id" | "titel" | "isbn">[] {
+  return getDb()
+    .prepare(`SELECT id, titel, isbn FROM buch WHERE ${OHNE_KATEGORIE} AND id > @abId ORDER BY id LIMIT @anzahl`)
+    .all({ fallback: KATEGORIE_FALLBACK, abId, anzahl }) as Pick<Buch, "id" | "titel" | "isbn">[];
+}
+
+/**
+ * Trägt eine vorgeschlagene Kategorie ein — aber nur, wenn das Buch noch unter „Sonstiges"
+ * steht. Hat es jemand in der Zwischenzeit von Hand eingeordnet, gewinnt der Mensch.
+ * Liefert, ob sich etwas geändert hat.
+ */
+export function setzeVorgeschlageneKategorie(id: number, kategorie: string): boolean {
+  if (!(KATEGORIEN as readonly string[]).includes(kategorie) || kategorie === KATEGORIE_FALLBACK) return false;
+  return (
+    getDb()
+      .prepare(
+        `UPDATE buch SET kategorie = @kategorie, geaendert_am = datetime('now')
+          WHERE id = @id AND kategorie = @fallback`
+      )
+      .run({ id, kategorie, fallback: KATEGORIE_FALLBACK }).changes > 0
+  );
+}
+
 /**
  * Benennt eine Serie um — an allen Bänden zugleich.
  *

@@ -4,7 +4,7 @@ import { BuchFormular } from "@/components/BuchFormular";
 import { SeitenKopf } from "@/components/SeitenKopf";
 import { requireUser } from "@/lib/auth";
 import { speichereNeuesBuch } from "@/lib/buchActions";
-import { bandAusOpenLibrary, metadatenZuIsbn } from "@/lib/buchapi";
+import { bandAusOpenLibrary, kategorieZuIsbn, metadatenZuIsbn } from "@/lib/buchapi";
 import { findeNachIsbn } from "@/lib/buecher";
 import { vergebeneSerien, vergebeneVerlage } from "@/lib/suche";
 import { normalisiereIsbn } from "@/lib/isbn";
@@ -37,12 +37,14 @@ export default async function ErfassenSeite({
   const normalisiert = isbn ? normalisiereIsbn(isbn) : null;
   if (!normalisiert) notFound();
 
-  // Die Bandnummer läuft parallel zu den Metadaten: Sie braucht zwei eigene Anfragen bei Open
-  // Library, und hintereinander verlängerten die jeden Scan um eine Sekunde.
-  const [auskunft, duplikate, bandOpenLibrary] = await Promise.all([
+  // Bandnummer und Kategorie laufen parallel zu den Metadaten: Die Bandnummer braucht zwei
+  // eigene Anfragen bei Open Library, und hintereinander verlängerten die jeden Scan um eine
+  // Sekunde. Die Kategorie kommt immer von der DNB, auch wenn Google die Metadaten liefert.
+  const [auskunft, duplikate, bandOpenLibrary, vorschlag] = await Promise.all([
     metadatenZuIsbn(normalisiert),
     Promise.resolve(findeNachIsbn(normalisiert)),
     bandAusOpenLibrary(normalisiert),
+    kategorieZuIsbn(normalisiert),
   ]);
   const { treffer, stoerungen } = auskunft;
 
@@ -98,6 +100,8 @@ export default async function ErfassenSeite({
           coverUrl: treffer?.coverUrl,
           // Die Nummer der DNB geht vor: Sie zählt die Bände dieser deutschen Ausgabe.
           bandVorschlag: treffer?.band ?? bandOpenLibrary,
+          kategorie: vorschlag.kategorie,
+          kategorieVorgeschlagen: vorschlag.kategorie !== null,
         }}
       />
     </div>

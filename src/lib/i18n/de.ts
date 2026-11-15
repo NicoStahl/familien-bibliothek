@@ -139,6 +139,7 @@ export const de = {
     titel: "Titel",
     autor: "Autor",
     kategorie: "Kategorie",
+    kategorieVorschlag: "Vorschlag aus dem Katalog der Nationalbibliothek.",
     besitzer: "Besitzer",
     bitteWaehlen: "Bitte wählen",
     serie: "Serie",
@@ -251,6 +252,19 @@ export const de = {
     zeilen: (n: number) => (n === 1 ? "1 Zeile" : `${n} Zeilen`),
     exportFormat: "Semikolon-getrennt, für Excel",
     exportieren: "Katalog exportieren",
+    kategorien: "Kategorien",
+    kategorienText:
+      "Bücher unter „Sonstiges“ lassen sich nachträglich einordnen — mit demselben Vorschlag aus dem Katalog der Nationalbibliothek wie beim Scannen. Bücher ohne ISBN oder ohne Vorschlag bleiben, wo sie sind.",
+    kategorienOffen: (n: number) =>
+      n === 1 ? "1 Buch unter „Sonstiges“ mit ISBN" : `${n} Bücher unter „Sonstiges“ mit ISBN`,
+    kategorienKeine: "Kein Buch mit ISBN steht unter „Sonstiges“.",
+    kategorienStarten: "Kategorien nachtragen",
+    kategorienLaeuft: (geprueft: number, gesamt: number) => `Prüfe ${geprueft} von ${gesamt} …`,
+    kategorienFertig: (eingeordnet: number, ohne: number) =>
+      `${eingeordnet === 1 ? "1 Buch" : `${eingeordnet} Bücher`} eingeordnet, ${ohne} ohne Vorschlag.`,
+    kategorienStoerung:
+      "Die Nationalbibliothek antwortet gerade nicht. Was bis hierhin eingeordnet ist, bleibt gespeichert — später einfach noch einmal starten.",
+    kategorienListe: "Falsch eingeordnet? Buch antippen und dort ändern.",
     sprache: "Sprache",
     spracheText: "Gilt für dieses Gerät und diesen Browser.",
     anmeldung: "Anmeldung",

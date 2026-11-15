@@ -3,6 +3,9 @@ import { z } from "zod";
 import { normalisiereIsbn } from "./isbn";
 import { MVB_COVER } from "./coverVorschau";
 import type { Dienst, Dienststoerung, Stoerungsart } from "./stoerung";
+import { marcFelder, unterfeld, type MarcFeld } from "./marc";
+import { kategorieAusMarc } from "./kategorieVorschlag";
+import type { Kategorie } from "./kategorien";
 
 // Metadaten-Abruf bei den beiden kostenlosen Buch-APIs aus dem Plan. Keiner der beiden
 // VERLANGT einen Schlüssel — was lange wie "nichts zu konfigurieren" aussah. Am 05.09.2026
@@ -253,46 +256,6 @@ async function openLibraryNachIsbn(isbn13: string): Promise<Abfrage> {
   };
 }
 
-/** Die fünf vordefinierten XML-Entitäten und numerische Zeichenreferenzen. */
-function xmlText(roh: string): string {
-  return roh
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
-    .replace(/&#(\d+);/g, (_, dez: string) => String.fromCodePoint(Number(dez)))
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, "&")
-    .trim();
-}
-
-/** Ein MARC-Datenfeld: Kennzahl, zweiter Indikator, Unterfelder in Reihenfolge. */
-type MarcFeld = { tag: string; ind2: string; unter: { code: string; wert: string }[] };
-
-/**
- * Die Datenfelder eines MARC21-XML-Datensatzes.
- *
- * Katalogdaten klammern Artikel, die beim Sortieren übersprungen werden, mit den Steuerzeichen
- * U+0098/U+009C ein („Die Lügen der Frauen" kommt als `&#152;Die&#156; Lügen der Frauen`) —
- * unsichtbar, aber sie würden Suche und Serienabgleich zwischen zwei Wörtern zerschneiden.
- */
-function marcFelder(xml: string): MarcFeld[] {
-  return [
-    ...xml.matchAll(/<datafield tag="(\d{3})" ind1="." ind2="(.)">([\s\S]*?)<\/datafield>/g),
-  ].map(([, tag, ind2, inhalt]) => ({
-    tag,
-    ind2,
-    unter: [...inhalt.matchAll(/<subfield code="(\w)">([^<]*)<\/subfield>/g)].map(([, code, wert]) => ({
-      code,
-      wert: xmlText(wert).replace(/[\u0098\u009c¬]/g, "").trim(),
-    })),
-  }));
-}
-
-function unterfeld(feld: MarcFeld | undefined, code: string): string | undefined {
-  return feld?.unter.find((u) => u.code === code)?.wert || undefined;
-}
-
 /** „Rowling, J. K." → „J. K. Rowling". Namen ohne Komma bleiben, wie sie sind. */
 function vornameZuerst(name: string): string {
   const [nach, vor] = name.split(/,\s*/, 2);
@@ -397,32 +360,68 @@ export async function ladeMvbCover(isbn13: string): Promise<{ daten: Buffer; typ
   }
 }
 
+/** Ein DNB-Datensatz: die Felder, oder null für „kennt die DNB nicht", oder eine Störung. */
+type DnbDatensatz = { felder: MarcFeld[] | null; stoerung: Dienststoerung | null };
+
+/**
+ * Kurzzeitgedächtnis für DNB-Antworten.
+ *
+ * Ein Scan fragt die DNB sonst bis zu dreimal nach derselben Nummer: der Scanner für seine
+ * Karte, die Erfassungsseite für das Formular (dort mit Absicht ein zweites Mal, siehe
+ * erfassen/page.tsx) und daneben der Kategorie-Vorschlag. Abgelegt wird das Versprechen, nicht
+ * das Ergebnis — so teilen sich auch zwei gleichzeitig laufende Abfragen eine Anfrage.
+ * Störungen werden sofort wieder vergessen: Der nächste Versuch soll wirklich neu fragen.
+ */
+const DNB_MERKDAUER_MS = 10 * 60 * 1000;
+const DNB_HOECHSTENS = 100;
+const dnbGedaechtnis = new Map<string, { bis: number; antwort: Promise<DnbDatensatz> }>();
+
 /**
  * Fragt die Deutsche Nationalbibliothek nach einer ISBN (SRU-Schnittstelle, MARC21-XML).
  *
  * MARC statt des kürzeren Dublin Core, seit 04.10.2026: Bei Bänden mehrbändiger Werke — und so
  * katalogisiert die DNB viele Serienbände — liefert Dublin Core nur den Teiltitel, ohne Autor
  * und ohne Verlag („Die Weisheit des Feuers", sonst nichts). MARC hat alles in eigenen Feldern.
+ * Seit 15.11.2026 auch die Sachgruppen und Inhaltsarten für den Kategorie-Vorschlag.
  *
- * Kein Schlüssel, kein Kontingent. Ein XML-Parser als Abhängigkeit lohnt für die paar flachen
- * Felder nicht. Fehlt `numberOfRecords`, ist die Antwort keine SRU-Antwort und wird als Ausfall
- * gemeldet, nicht als „unbekannt".
+ * Kein Schlüssel, kein Kontingent. Fehlt `numberOfRecords`, ist die Antwort keine SRU-Antwort
+ * und wird als Ausfall gemeldet, nicht als „unbekannt".
  */
-async function dnbNachIsbn(isbn13: string): Promise<Abfrage> {
-  const abruf = await hole(
-    `https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve` +
-      `&query=num%3D${isbn13}&recordSchema=MARC21-xml&maximumRecords=1`,
-    "xml"
-  );
-  if (abruf.art === "stoerung") {
-    return { treffer: null, stoerung: { dienst: "DNB", art: abruf.stoerung } };
+function dnbDatensatz(isbn13: string): Promise<DnbDatensatz> {
+  const jetzt = Date.now();
+  const gemerkt = dnbGedaechtnis.get(isbn13);
+  if (gemerkt && gemerkt.bis > jetzt) return gemerkt.antwort;
+
+  const antwort = (async (): Promise<DnbDatensatz> => {
+    const abruf = await hole(
+      `https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve` +
+        `&query=num%3D${isbn13}&recordSchema=MARC21-xml&maximumRecords=1`,
+      "xml"
+    );
+    if (abruf.art === "stoerung") {
+      return { felder: null, stoerung: { dienst: "DNB", art: abruf.stoerung } };
+    }
+    const anzahl = /<numberOfRecords>(\d+)<\/numberOfRecords>/.exec(abruf.daten);
+    if (!anzahl) return { felder: null, stoerung: formfehler("DNB") };
+    if (anzahl[1] === "0") return { felder: null, stoerung: null };
+    return { felder: marcFelder(abruf.daten), stoerung: null };
+  })();
+
+  // Die Map behält die Einfügereihenfolge: Der erste Schlüssel ist der älteste.
+  if (dnbGedaechtnis.size >= DNB_HOECHSTENS) {
+    dnbGedaechtnis.delete(dnbGedaechtnis.keys().next().value!);
   }
+  dnbGedaechtnis.set(isbn13, { bis: jetzt + DNB_MERKDAUER_MS, antwort });
+  antwort.then((a) => {
+    if (a.stoerung) dnbGedaechtnis.delete(isbn13);
+  });
+  return antwort;
+}
 
-  const anzahl = /<numberOfRecords>(\d+)<\/numberOfRecords>/.exec(abruf.daten);
-  if (!anzahl) return { treffer: null, stoerung: formfehler("DNB") };
-  if (anzahl[1] === "0") return { treffer: null, stoerung: null };
+async function dnbNachIsbn(isbn13: string): Promise<Abfrage> {
+  const { felder, stoerung } = await dnbDatensatz(isbn13);
+  if (!felder) return { treffer: null, stoerung };
 
-  const felder = marcFelder(abruf.daten);
   const titel = dnbTitel(felder.find((f) => f.tag === "245"));
   if (!titel) return { treffer: null, stoerung: null };
   const { verlag, jahr } = dnbVeroeffentlichung(felder);
@@ -481,6 +480,27 @@ export async function metadatenZuIsbn(eingabe: string): Promise<IsbnAuskunft> {
     treffer: null,
     stoerungen: abfragen.map((a) => a.stoerung).filter((s): s is Dienststoerung => s !== null),
   };
+}
+
+/**
+ * Kategorie-Vorschlag zu einer ISBN, aus dem Datensatz der DNB (Regeln in
+ * kategorieVorschlag.ts).
+ *
+ * Ein eigener Weg neben `metadatenZuIsbn` und nicht ein Feld an deren Treffer: Liefert Google
+ * die Metadaten, wird die DNB dort gar nicht gefragt — die Kategorie kennt aber nur sie. Die
+ * Erfassungsseite ruft beides parallel auf; dank des Kurzzeitgedächtnisses geht dabei trotzdem
+ * nur eine Anfrage an die DNB.
+ *
+ * `stoerung` gesetzt heißt: Die Frage blieb unbeantwortet. Die Nachkategorisierung bricht dann
+ * ab, statt das Buch als „ohne Vorschlag" abzuhaken.
+ */
+export async function kategorieZuIsbn(
+  eingabe: string
+): Promise<{ kategorie: Kategorie | null; stoerung: Dienststoerung | null }> {
+  const isbn13 = normalisiereIsbn(eingabe);
+  if (!isbn13) return { kategorie: null, stoerung: null };
+  const { felder, stoerung } = await dnbDatensatz(isbn13);
+  return { kategorie: felder ? kategorieAusMarc(felder) : null, stoerung };
 }
 
 /**

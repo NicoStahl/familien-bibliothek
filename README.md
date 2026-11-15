@@ -24,6 +24,9 @@ auch am Rechner.
   praktisch jedes in Deutschland erschienene Buch und braucht keinen Schlüssel
 - **Cover-Kette** Google Books → DNB/MVB → Open Library → Amazon, mit Erkennung der
   Platzhalterbilder („Bild nicht verfügbar"); eigene Fotos lassen sich hochladen
+- **Kategorie-Vorschlag** beim Scannen aus dem Katalogdatensatz der DNB (Sachgruppe,
+  Inhaltsart, Zielgruppe): Erstleser, Bilderbuch, Jugendbuch, Comic … — feste Regeln, keine KI.
+  Bücher unter „Sonstiges" lassen sich unter „Mehr" nachträglich einordnen
 - **Serien** mit Lückenanzeige und Umbenennen; beim Erfassen werden Serie (über Titel oder
   Autor, aus dem eigenen Katalog) und Bandnummer vorgeschlagen
 - **Ausleihe:** an wen, seit wann, und eine Liste aller verliehenen Bücher
@@ -52,6 +55,8 @@ npm run dev -- -p 3004
 Danach unter `http://localhost:3004` aufrufen. Ohne OIDC-Werte genügt ein Benutzername, kein
 Passwort. In Produktion gibt es dieses Dev-Login nicht.
 
+`npm test` prüft die Regeln des Kategorie-Vorschlags gegen echte DNB-Datensätze in `tests/dnb/`.
+
 Der Barcode-Scanner braucht die Kamera, und die gibt der Browser nur in einem sicheren Kontext
 frei: am Rechner über `localhost`, am Handy erst über HTTPS.
 
@@ -74,7 +79,8 @@ Besitzer ist nur eine Eigenschaft des Buchs. Kinder brauchen also kein eigenes K
 
 Die Kategorien stehen fest in `src/lib/kategorien.ts` und lassen sich dort ändern. In der
 Datenbank steht immer der deutsche Name; übersetzt wird nur die Anzeige (`src/lib/i18n/`). Eine
-neue Kategorie braucht deshalb einen Eintrag in beiden Wörterbüchern.
+neue Kategorie braucht deshalb einen Eintrag in beiden Wörterbüchern — und, wenn sie vorgeschlagen
+werden soll, eine Regel in `src/lib/kategorieVorschlag.ts`.
 
 **Eine weitere Sprache** kommt als eigene Datei neben `src/lib/i18n/de.ts` dazu und wird in
 `src/lib/i18n/index.ts` eingetragen. TypeScript meldet beim Bauen jeden fehlenden Text.
@@ -117,7 +123,8 @@ SSO-Client-Anwendung", und zwar erst beim Token-Austausch.
 src/lib/       db.ts (SQLite), schema.ts (Datenmodell), auth.ts + oidc.ts (Anmeldung)
                isbn.ts (Normalisierung, Prüfziffern), buchapi.ts (Google Books / DNB / Open Library)
                buecher.ts (CRUD, Duplikat-Suche, Serien), suche.ts (Filter), cover.ts (Ablage)
-               kategorien.ts (feste Liste), besitzer.ts (aus BESITZER), csv.ts, datum.ts
+               kategorien.ts (feste Liste), kategorieVorschlag.ts (Regeln), marc.ts (DNB-Datensätze)
+               besitzer.ts (aus BESITZER), csv.ts, datum.ts
                i18n/ (Wörterbücher de.ts und en.ts, Sprachwahl)
 src/app/(app)/ alles hinter der Anmeldung, mit Tab-Leiste
 src/app/api/   auth/, cover/ (Bildauslieferung), cover-vorschau/ (DNB-Cover durchgereicht),
@@ -159,6 +166,9 @@ computer too. The name is German for "book fox".
   practically every book published in Germany and needs no key
 - **Cover chain** Google Books → DNB/MVB → Open Library → Amazon, detecting "image not
   available" placeholders; you can also upload your own photo
+- **Category suggestion** when scanning, from the DNB catalogue record (subject group, content
+  type, target audience): early reader, picture book, young adult, comic … — fixed rules, no AI.
+  Books filed under "Other" can be sorted afterwards under "More"
 - **Series** with gap detection and renaming; when adding a book, the series (by title or
   author, from your own catalogue) and volume number are suggested
 - **Lending:** to whom, since when, and a list of all books currently lent out
@@ -187,6 +197,8 @@ npm run dev -- -p 3004
 Then open `http://localhost:3004`. Without OIDC values a username is enough, no password. The
 dev login does not exist in production.
 
+`npm test` checks the category suggestion rules against real DNB records in `tests/dnb/`.
+
 The barcode scanner needs the camera, which browsers only allow in a secure context: on a
 computer via `localhost`, on a phone only via HTTPS.
 
@@ -209,7 +221,8 @@ a property of the book. Children don't need an account.
 
 Categories are fixed in `src/lib/kategorien.ts` and can be changed there. The database always
 stores the German name; only the display is translated (`src/lib/i18n/`), so a new category
-needs an entry in both dictionaries.
+needs an entry in both dictionaries — and, if it should be suggested, a rule in
+`src/lib/kategorieVorschlag.ts`.
 
 **Another language** is added as a new file next to `src/lib/i18n/de.ts` and registered in
 `src/lib/i18n/index.ts`. TypeScript reports every missing text at build time.
